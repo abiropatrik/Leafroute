@@ -1,0 +1,4 @@
+szerver futtatás: python manage.py runserver
+
+migration create: python manage.py makemigrations
+migrate: python manage.py migrate
