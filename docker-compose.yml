@@ -8,5 +8,12 @@ services:
     image: leafroute-web:latest
     command: python manage.py runserver 0.0.0.0:8000
     volumes: *service-volumes
+    depends_on:
+      - db_migrate
     ports:
       - "8000:8000"
+
+  db_migrate:
+    image:  leafroute-web:latest
+    command: python manage.py migrate
+    volumes: *service-volumes
