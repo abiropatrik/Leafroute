@@ -12,3 +12,6 @@ compose-stop:
 
 compose-manage-py:
 	docker-compose run --rm web python manage.py $(options) website python manage.py $(cmd)
+
+# mysql-start:
+# 	docker run  --name mysql-container -p 3306:3306 -e MYSQL_ROOT_PASSWORD=szakdoga -d mysql:8.0

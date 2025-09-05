@@ -5,11 +5,13 @@ x-service-volumes: &service-volumes
 
 services:
   website:
+    container_name: leafroute-web
     image: leafroute-web:latest
     command: python manage.py runserver 0.0.0.0:8000
     volumes: *service-volumes
     depends_on:
       - db_migrate
+      - mysql
     ports:
       - "8000:8000"
 
@@ -17,3 +19,19 @@ services:
     image:  leafroute-web:latest
     command: python manage.py migrate
     volumes: *service-volumes
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: test_db
+      MYSQL_ROOT_PASSWORD: szakdoga
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:

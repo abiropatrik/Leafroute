@@ -2,3 +2,5 @@ szerver futtatás: python manage.py runserver
 
 migration create: python manage.py makemigrations
 migrate: python manage.py migrate
+
+admin account create: python manage.py createsuperuser
