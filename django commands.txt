@@ -4,3 +4,5 @@ migration create: python manage.py makemigrations
 migrate: python manage.py migrate
 
 admin account create: python manage.py createsuperuser
+
+django python commands: docker-compose -p projectContainer run --rm website python manage.py makemigrations

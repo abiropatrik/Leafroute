@@ -1,11 +1,8 @@
-version: '3.8'
-
 x-service-volumes: &service-volumes
   - ./:/app/:rw,cached
 
 services:
   website:
-    container_name: leafroute-web
     image: leafroute-web:latest
     command: python manage.py runserver 0.0.0.0:8000
     volumes: *service-volumes
