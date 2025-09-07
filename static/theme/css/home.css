@@ -1,4 +1,3 @@
-/* General Styles */
 body {
     font-family: 'Poppins', sans-serif;
     margin: 0;
@@ -8,15 +7,13 @@ body {
     color: #fff;
 }
 
-/* Homepage Wrapper */
 .homepage-wrapper {
-    display: flex; /* Use flexbox to center the homepage content */
-    justify-content: center; /* Center horizontally */
-    align-items: center; /* Center vertically */
-    height: 100vh; /* Full viewport height */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
 }
 
-/* Homepage Container */
 .homepage-container {
     display: flex;
     flex-direction: column;
@@ -25,13 +22,12 @@ body {
     text-align: center;
     background-color: rgba(0, 0, 0, 0.6);
     max-width: 500px;
-    padding: 20px; /* Add padding for spacing inside the container */
-    border-radius: 10px; /* Optional: Rounded corners */
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* Optional: Add a shadow for better aesthetics */
+    padding: 20px; 
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
 }
 
 
-/* Welcome Text */
 .welcome-text h1 {
     font-size: 2.5rem;
     margin: 10px 0;
