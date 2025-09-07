@@ -3,10 +3,18 @@
 
 {% block title %}Home{% endblock %}
 
-{% block content %}
-<img src="{% static 'theme/img/156340.jpg' %}" alt="Background" width="1200" height="800">
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'theme/css/home.css' %}">
+{% endblock %}
 
-<h1>
-    Homepage
-</h1>
+{% block content %}
+<div class="homepage-wrapper">
+    <div class="homepage-container">
+        <div class="welcome-text">
+            <h1>Welcome to <img src="{% static 'theme/img/logo-white2.png' %}" alt="Leafroute Logo" class="logo"></h1>
+            <p>The route to sustainable logistics.</p>
+            <a href="{% url 'public:about' %}" class="btn">Learn More</a>
+        </div>
+    </div>
+</div>
 {% endblock %}

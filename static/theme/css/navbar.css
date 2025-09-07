@@ -13,6 +13,13 @@
     margin-right: 20px;
 }
 
+.navbar .links {
+    display: flex;
+    gap: 15px;
+    margin-left: auto;
+    align-items: center;
+}
+
 .navbar span {
     margin: 0 10px;
     font-size: 16px;
@@ -33,7 +40,10 @@
 }
 
 .navbar .active-link {
-    color: #38a028f3; 
+    color: #38a028f3;
+    border: 2px solid #38a028f3; 
+    padding: 8px;
+    border-radius: 8px;
 }
 
 .navbar .active-link a {
