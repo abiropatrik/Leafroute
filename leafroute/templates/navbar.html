@@ -1,19 +1,23 @@
-<div>
+{% load static %}
+<div class="navbar">
+    <img src="{% static 'theme/img/logo-dark2.png' %}" alt="Logo"/>
     {% url 'public:index' as index_url %}
-    <span>{% if request.path == index_url %}Home{% else %}<a href="{{ index_url }}">Home</a>{% endif %}</span>
+    <span class="{% if request.path == index_url %}active-link{% endif %}">
+        {% if request.path == index_url %}Home{% else %}<a href="{{ index_url }}">Home</a>{% endif %}
+    </span>
     {% url 'public:about' as about_url %}
-    <span>{% if request.path == about_url %}About{% else %}<a href="{{ about_url }}">About</a>{% endif %}</span>
+    <span class="{% if request.path == about_url %}active-link{% endif %}">
+        {% if request.path == about_url %}About{% else %}<a href="{{ about_url }}">About</a>{% endif %}
+    </span>
     {% url 'public:contact' as contact_url %}
-    <span>{% if request.path == contact_url %}Contact{% else %}<a href="{{ contact_url }}">Contact</a>{% endif %}</span>
+    <span class="{% if request.path == contact_url %}active-link{% endif %}">
+        {% if request.path == contact_url %}Contact{% else %}<a href="{{ contact_url }}">Contact</a>{% endif %}
+    </span>
     <span style="float:right">
         {% if user.is_authenticated %}
             {% url 'account:profile' as profile_url %}
-            <span>Hi 
-                {% if request.path == profile_url%}
-                    {{user.username}}
-                {% else %}
-                    <a href="{{ profile_url }}">{{user.username}}</a>
-                {% endif %}!
+            <span class="{% if request.path == profile_url %}active-link{% endif %}">
+                Hi {% if request.path == profile_url %}{{ user.username }}{% else %}<a href="{{ profile_url }}">{{ user.username }}</a>{% endif %}!
             </span>
             <span>
                 {% url 'account:logout' as logout_url %}
@@ -24,7 +28,9 @@
             </span>
         {% else %}
             {% url 'account:login' as login_url %}
-            <span><a href="{{login_url}}">Login</a></span>
+            <span class="{% if request.path == login_url %}active-link{% endif %}">
+                <a href="{{ login_url }}">Login</a>
+            </span>
         {% endif %}
     </span>
 </div>

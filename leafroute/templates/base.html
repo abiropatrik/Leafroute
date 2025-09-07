@@ -4,7 +4,8 @@
     {% load static %}
     <meta charset="utf-8">
     <title>{% block title %} Leaf Route {% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'theme/css/styles.css' %}">
+    {% block extra_css %}{% endblock %}
+    <link rel="stylesheet" href="{% static 'theme/css/navbar.css' %}">
 </head>
 <body>
     {%include 'navbar.html' %}

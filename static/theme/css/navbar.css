@@ -1,0 +1,86 @@
+.navbar {
+    background-color:  rgba(0, 0, 0, 0.6); 
+    color: #fff;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: 'Poppins', sans-serif;
+}
+
+.navbar img {
+    height: 40px;
+    margin-right: 20px;
+}
+
+.navbar span {
+    margin: 0 10px;
+    font-size: 16px;
+}
+
+.navbar span a {
+    color: #fff;
+    text-decoration:none;
+    transition: color 0.3s ease;
+}
+
+.navbar span a:hover {
+    color: #1cd200f3; 
+}
+
+.navbar span {
+    font-weight: bold; 
+}
+
+.navbar .active-link {
+    color: #38a028f3; 
+}
+
+.navbar .active-link a {
+    color: inherit;
+    pointer-events: none; 
+    text-decoration: none; 
+}
+
+.navbar span[style="float:right"] {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+}
+
+/* Logout Button */
+.navbar span form button {
+    background-color: #17ad00e1;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+.navbar span form button:hover {
+    background-color: #005726; 
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .navbar {
+        flex-wrap: wrap; 
+        text-align: center;
+    }
+
+    .navbar img {
+        margin-bottom: 10px;
+    }
+
+    .navbar span {
+        margin: 5px 0;
+    }
+
+    .navbar span[style="float:right"] {
+        margin-left: 0;
+        justify-content: center;
+    }
+}
