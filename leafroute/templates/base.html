@@ -5,7 +5,8 @@
     <meta charset="utf-8">
     <title>{% block title %} Leaf Route {% endblock %}</title>
     {% block extra_css %}{% endblock %}
-    <link rel="stylesheet" href="{% static 'theme/css/navbar.css' %}">
+    <link rel="stylesheet" href="{% static 'theme/css/navbar-auth.css' %}">
+    <link rel="icon" type="image/png" href="{% static 'theme/img/favicon.png' %}">
 </head>
 <body>
     {%include 'navbar.html' %}
@@ -13,5 +14,15 @@
         {% block content %}
         {% endblock %}
     </main>
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById("sidebar");
+            if (sidebar.style.width === "300px") {
+                sidebar.style.width = "0";
+            } else {
+                sidebar.style.width = "300px";
+            }
+        }
+    </script>
 </body>
 </html>

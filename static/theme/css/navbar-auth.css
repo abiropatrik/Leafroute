@@ -1,0 +1,91 @@
+/* General Navbar Styles */
+.navbar {
+    background-color: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: 'Poppins', sans-serif;
+}
+
+.navbar .logo {
+    height: 30px;
+    margin-left: 10px;
+}
+
+.auth-navbar {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-left: auto;
+}
+
+.auth-navbar .logout-btn {
+    background-color: #17ad00e1;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+.auth-navbar .logout-btn:hover {
+    background-color: #005726;
+}
+
+/* Hamburger Menu */
+.hamburger-menu {
+    font-size: 20px;
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    margin-left: 10px;}
+
+/* Shared link styles for navbar login and sidebar links */
+.nav-link {
+    color: #fff;
+    text-decoration: none;
+    font-size: 18px; /* match sidebar */
+    display: block;
+    padding: 10px 15px; /* match sidebar */
+    transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+    color: #17ad00e1;
+}
+
+.active-link {
+    color: #17ad00e1;
+}
+
+/* Sidebar Styles */
+.sidebar {
+    height: 100%;
+    width: 0;
+    position: fixed;
+    z-index: 1000;
+    top: 0;
+    left: 0;
+    background-color: rgba(0, 0, 0, 0.9);
+    overflow-x: hidden;
+    transition: 0.3s;
+    padding-top: 60px;
+}
+
+.sidebar a {
+    display: block;
+}
+
+.sidebar .closebtn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 36px;
+    color: #fff;
+    cursor: pointer;
+}

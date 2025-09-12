@@ -1,36 +1,26 @@
 {% load static %}
 <div class="navbar">
-    <img src="{% static 'theme/img/logo-dark2.png' %}" alt="Logo"/>
-    <div class="links">
-        {% url 'public:index' as index_url %}
-        <span class="{% if request.path == index_url %}active-link{% endif %}">
-            {% if request.path == index_url %}Home{% else %}<a href="{{ index_url }}">Home</a>{% endif %}
-        </span>
-        {% url 'public:about' as about_url %}
-        <span class="{% if request.path == about_url %}active-link{% endif %}">
-            {% if request.path == about_url %}About{% else %}<a href="{{ about_url }}">About</a>{% endif %}
-        </span>
-        {% url 'public:contact' as contact_url %}
-        <span class="{% if request.path == contact_url %}active-link{% endif %}">
-            {% if request.path == contact_url %}Contact{% else %}<a href="{{ contact_url }}">Contact</a>{% endif %}
-        </span>
+    <a href="{% url 'public:index' %}"><img src="{% static 'theme/img/logo-dark2.png' %}" alt="Logo" class="logo"/></a>
+    <button class="hamburger-menu" onclick="toggleSidebar()">☰</button>
+    <div class="auth-navbar">
         {% if user.is_authenticated %}
-            {% url 'account:profile' as profile_url %}
-            <span class="{% if request.path == profile_url %}active-link{% endif %}">
-                Hi {% if request.path == profile_url %}{{ user.username }}{% else %}<a href="{{ profile_url }}">{{ user.username }}</a>{% endif %}!
-            </span>
-            <span>
-                {% url 'account:logout' as logout_url %}
-                <form method="post" action="{{ logout_url }}" style="display:inline;">
-                    {% csrf_token %}
-                    <button type="submit">Logout</button>
-                </form>
-            </span>
+            <span>{{ user.first_name }} {{ user.last_name }}</span>
+            <img src="{% static 'theme/img/user_navbar_icon.png' %}" alt="User icon" class="logo"/>
+            <form method="post" action="{% url 'account:logout' %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="logout-btn">Logout</button>
+            </form>
         {% else %}
-            {% url 'account:login' as login_url %}
-            <span class="{% if request.path == login_url %}active-link{% endif %}">
-                <a href="{{ login_url }}">Login</a>
+            <span class="login-link">
+                <a href="{% url 'account:login' %}" class="nav-link {% if request.resolver_match.url_name == 'login' %}active-link{% endif %}">Login</a>
             </span>
         {% endif %}
     </div>
+</div>
+
+<div id="sidebar" class="sidebar">
+    <a href="javascript:void(0)" class="closebtn" onclick="toggleSidebar()">&times;</a>
+    <a href="{% url 'public:index' %}" class="nav-link {% if request.resolver_match.url_name == 'index' %}active-link{% endif %}">Home</a>
+    <a href="{% url 'public:about' %}" class="nav-link {% if request.resolver_match.url_name == 'about' %}active-link{% endif %}">About</a>
+    <a href="{% url 'public:contact' %}" class="nav-link {% if request.resolver_match.url_name == 'contact' %}active-link{% endif %}">Contact</a>
 </div>
