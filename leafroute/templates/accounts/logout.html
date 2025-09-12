@@ -1,9 +1,20 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Contact{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'theme/css/home.css' %}">
+{% endblock %}
+
 {% block content %}
-<h1>
-    User successfully logged out.
-</h1>
+<div class="homepage-wrapper">
+    <div class="homepage-container">
+        <div class="welcome-text">
+            <h2>
+                User successfully logged out.
+            </h2>
+        </div>
+    </div>
+</div>
 {% endblock %}

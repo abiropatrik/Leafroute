@@ -1,9 +1,20 @@
 {% extends 'base.html' %}
+{% load static %}
+
 
 {% block title %}Contact{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'theme/css/about.css' %}">
+{% endblock %}
+
 {% block content %}
-<h1>
-    Contact
-</h1>
+<div class="about-container">
+    <h1>Contact</h1>
+    <p>
+        The Leafroute project was created by Patrik Biró as a part of his thesis at Óbuda University.
+        If you have any questions or would like to connect, feel free to reach out via email at 
+        <a href="mailto:patrik.biro@example.com">p.biro03@gmail.com</a>.
+    </p>
+</div>
 {% endblock %}
