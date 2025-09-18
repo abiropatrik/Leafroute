@@ -5,11 +5,24 @@
     <div class="auth-navbar">
         {% if user.is_authenticated %}
             <span>{{ user.first_name }} {{ user.last_name }}</span>
-            <img src="{% static 'theme/img/user_navbar_icon.png' %}" alt="User icon" class="logo"/>
-            <form method="post" action="{% url 'account:logout' %}" style="display:inline;">
-                {% csrf_token %}
-                <button type="submit" class="logout-btn">Logout</button>
-            </form>
+            <div class="dropdown">
+                <img src="{% static 'theme/img/user_navbar_icon.png' %}" 
+                     alt="User icon" 
+                     class="user-icon"
+                     onclick="toggleDropdown()" />
+
+                <div id="userDropdown" class="dropdown-content">
+                    <!--<a href="{% url 'account:profile' %}">Account</a> -->
+                    <form method="get" action="{% url 'account:profile' %}">
+                        <button type="submit">Account</button>
+                    </form>
+
+                    <form method="post" action="{% url 'account:logout' %}">
+                        {% csrf_token %}
+                        <button type="submit">Logout</button>
+                    </form>
+                </div>
+            </div>
         {% else %}
             <span class="login-link">
                 <a href="{% url 'account:login' %}" class="nav-link {% if request.resolver_match.url_name == 'login' %}active-link{% endif %}">Login</a>
@@ -24,3 +37,19 @@
     <a href="{% url 'public:about' %}" class="nav-link {% if request.resolver_match.url_name == 'about' %}active-link{% endif %}">About</a>
     <a href="{% url 'public:contact' %}" class="nav-link {% if request.resolver_match.url_name == 'contact' %}active-link{% endif %}">Contact</a>
 </div>
+
+<script>
+function toggleDropdown() {
+    document.querySelector('.dropdown').classList.toggle('show');
+}
+
+// Close dropdown if clicked outside
+window.onclick = function(event) {
+    if (!event.target.matches('.user-icon')) {
+        let dropdowns = document.getElementsByClassName("dropdown");
+        for (let i = 0; i < dropdowns.length; i++) {
+            dropdowns[i].classList.remove('show');
+        }
+    }
+}
+</script>
