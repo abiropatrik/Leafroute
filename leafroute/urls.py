@@ -23,4 +23,5 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("",include('leafroute.apps.public.urls' )),
     path('accounts/',include('leafroute.apps.accounts.urls')),
+    path('internal/',include('leafroute.apps.internal.urls')),
 ]

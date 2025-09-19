@@ -8,3 +8,4 @@ admin account create: python manage.py createsuperuser
 django python commands: docker-compose -p projectContainer run --rm website python manage.py makemigrations
 
 user permission check in html:  <!--{% if perms.accounts.organiser_tasks %}-->
+new app creation: python manage.py startapp internal

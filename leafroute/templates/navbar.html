@@ -35,8 +35,14 @@
     <a href="javascript:void(0)" class="closebtn" onclick="toggleSidebar()">&times;</a>
     <a href="{% url 'public:index' %}" class="nav-link {% if request.resolver_match.url_name == 'index' %}active-link{% endif %}">Home</a>
     {% if not user.is_authenticated %}
-    <a href="{% url 'public:about' %}" class="nav-link {% if request.resolver_match.url_name == 'about' %}active-link{% endif %}">About</a>
-    <a href="{% url 'public:contact' %}" class="nav-link {% if request.resolver_match.url_name == 'contact' %}active-link{% endif %}">Contact</a>
+        <a href="{% url 'public:about' %}" class="nav-link {% if request.resolver_match.url_name == 'about' %}active-link{% endif %}">About</a>
+        <a href="{% url 'public:contact' %}" class="nav-link {% if request.resolver_match.url_name == 'contact' %}active-link{% endif %}">Contact</a>
+    {% elif perms.accounts.organiser_tasks %}
+        <a href="{% url 'internal:new_transport' %}" class="nav-link {% if request.resolver_match.url_name == 'new_transport' %}active-link{% endif %}">New Transport</a>
+        <a href="{% url 'internal:vehicle_settings' %}" class="nav-link {% if request.resolver_match.url_name == 'vehicle_settings' %}active-link{% endif %}">Vehicle Settings</a>
+        <a href="{% url 'internal:warehouse_settings' %}" class="nav-link {% if request.resolver_match.url_name == 'warehouse_settings' %}active-link{% endif %}">Warehouse Settings</a>
+        <a href="{% url 'internal:new_route' %}" class="nav-link {% if request.resolver_match.url_name == 'new_route' %}active-link{% endif %}">New Route</a>
+        <a href="{% url 'internal:dashboards' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboards' %}active-link{% endif %}">Dashboards</a>    
     {% endif %}
 </div>
 
