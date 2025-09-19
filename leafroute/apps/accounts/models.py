@@ -29,3 +29,11 @@ class UserProfile(models.Model):
     persona = models.ForeignKey(UserPersona, on_delete=models.SET_NULL, null=True, blank=True) #one to many
     interests=models.ManyToManyField(UserInterest,blank=True) #many to many
 
+    class Meta:
+        permissions = [
+            ("organiser_tasks", "Is able to proceed with tasks related to organisers"),
+            ("driver_tasks", "Is able to proceed with tasks related to drivers"),
+            ("warehouseman_tasks", "Is able to proceed with tasks related to warehousemen"),
+            ("manager_tasks", "Is able to proceed with tasks related to managers"),
+        ]
+
