@@ -1,3 +1,5 @@
+project létrehozása: django-admin startproject your_project_name
+
 szerver futtatás: python manage.py runserver
 
 migration create: python manage.py makemigrations

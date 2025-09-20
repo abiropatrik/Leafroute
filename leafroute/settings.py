@@ -78,7 +78,23 @@ WSGI_APPLICATION = 'leafroute.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'test_db',
+        'NAME': 'DWH',
+        'USER': 'root',
+        'PASSWORD': 'szakdoga',
+        'HOST': 'mysql',
+        'PORT': '3306',
+    },
+    'stage': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'STAGE',
+        'USER': 'root',
+        'PASSWORD': 'szakdoga',
+        'HOST': 'mysql',
+        'PORT': '3306',
+    },
+    'dm': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'DM',
         'USER': 'root',
         'PASSWORD': 'szakdoga',
         'HOST': 'mysql',
