@@ -10,10 +10,15 @@ class Command(BaseCommand):
         content_type = ContentType.objects.get_for_model(UserProfile)
 
         # Get permissions
+        adm_perm = Permission.objects.get(codename="admin_tasks", content_type=content_type)
         org_perm = Permission.objects.get(codename="organiser_tasks", content_type=content_type)
         drv_perm = Permission.objects.get(codename="driver_tasks", content_type=content_type)
         wh_perm = Permission.objects.get(codename="warehouseman_tasks", content_type=content_type)
         mgr_perm = Permission.objects.get(codename="manager_tasks", content_type=content_type)
+
+        # Admin group (view + admin tasks)
+        admin_group, _ = Group.objects.get_or_create(name="Admin")
+        admin_group.permissions.add(adm_perm)
 
         # Organiser group (view + organiser tasks)
         organiser_group, _ = Group.objects.get_or_create(name="Organisers")

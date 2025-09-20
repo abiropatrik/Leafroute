@@ -2,13 +2,24 @@ from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User, Group
 
 class Command(BaseCommand):
-    help = "Create initial test users"
+    help = "Create initial demo users"
 
     def handle(self, *args, **options):
+        admin_group, _ = Group.objects.get_or_create(name="Admin")
         organiser_group, _ = Group.objects.get_or_create(name="Organisers")
         driver_group, _ = Group.objects.get_or_create(name="Drivers")
         warehouseman_group, _ = Group.objects.get_or_create(name="Warehousemen")
         manager_group, _ = Group.objects.get_or_create(name="Managers")
+
+        if not User.objects.filter(username="d_admin").exists():
+            user = User.objects.create_superuser(
+                username="d_admin",
+                email="d_admin@leafroute.com",
+                password="szakdoga",
+                first_name="Adam",
+                last_name="Admin"
+            )
+            user.groups.add(admin_group)
 
         if not User.objects.filter(username="d_organiser").exists():
             user = User.objects.create_user(

@@ -31,6 +31,7 @@ class UserProfile(models.Model):
 
     class Meta:
         permissions = [
+            ("admin_tasks", "Is able to proceed with admin related tasks"),
             ("organiser_tasks", "Is able to proceed with tasks related to organisers"),
             ("driver_tasks", "Is able to proceed with tasks related to drivers"),
             ("warehouseman_tasks", "Is able to proceed with tasks related to warehousemen"),
