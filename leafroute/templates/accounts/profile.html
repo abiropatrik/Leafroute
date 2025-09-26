@@ -7,7 +7,7 @@
     {{ user.get_full_name }} (@{{user.username}})
 </h1>
 
-<!-- the point of this (with profile=user.profile)) is to connect the two tables -->
+<!-- the point of this (with profile=user.profile)) is to connect the two tables
 {% with profile=user.profile %}
     {% if profile %}
         <h2>
@@ -28,5 +28,5 @@
             {% endfor %}
         </div>
     {% endif %}
-{% endwith %}
+{% endwith %} -->
 {% endblock %}

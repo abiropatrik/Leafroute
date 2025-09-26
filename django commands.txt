@@ -4,6 +4,8 @@ szerver futtatás: python manage.py runserver
 
 migration create: python manage.py makemigrations
 migrate: python manage.py migrate
+régi felesleges cuccok törlése:  make compose-manage-py cmd="remove_stale_contenttypes"
+
 
 admin account create: python manage.py createsuperuser
 
@@ -11,3 +13,11 @@ django python commands: docker-compose -p projectContainer run --rm website pyth
 
 user permission check in html:  <!--{% if perms.accounts.organiser_tasks %}-->
 new app creation: python manage.py startapp internal
+
+nem default database-re migrálás:
+ make compose-manage-py cmd="migrate --database=stage --run-syncdb"
+
+ezeket használtam az init.sqlhez:
+    docker-compose down
+    docker volume rm $(docker volume ls -qf name=mysql_data)
+    docker-compose up --build
