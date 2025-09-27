@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'leafroute.apps.accounts',
     'leafroute.apps.internal',
+    'leafroute.apps.internal_stage',
 ]
 
 MIDDLEWARE = [
