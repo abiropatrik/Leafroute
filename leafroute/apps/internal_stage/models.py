@@ -112,7 +112,7 @@ class RoutePart_ST(models.Model):
 
 class WorkSchedule_ST(models.Model):
     schedule_id = models.AutoField(primary_key=True, db_column="Schedule_id")
-    user = models.ForeignKey(UserProfile_ST, on_delete=models.CASCADE, db_column="User_id")
+    user = models.CharField(max_length=255, null=True, blank=True)
     work_day = models.CharField(max_length=255, null=True, blank=True)
     start_time = models.CharField(max_length=255, null=True, blank=True)
     end_time = models.CharField(max_length=255, null=True, blank=True)

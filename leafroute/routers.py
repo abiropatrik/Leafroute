@@ -1,7 +1,7 @@
 # routers.py
 class ETLRouter:
 
-    SYSTEM_APPS = ['auth', 'contenttypes', 'sessions', 'admin']
+    SYSTEM_APPS = ['auth', 'contenttypes', 'sessions', 'admin','internal']
 
     def db_for_read(self, model, **hints):
         if model._meta.app_label in self.SYSTEM_APPS:

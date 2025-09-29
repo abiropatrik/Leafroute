@@ -4,6 +4,7 @@ from . import views
 app_name = "internal"
 
 urlpatterns = [
+    path('internal/workschedule', views.workschedule, name="workschedule"),
     path('internal/new_transport', views.new_transport, name="new_transport"),
     path('internal/new_route', views.new_route, name="new_route"),
     path('internal/vehicle_settings', views.vehicle_settings, name="vehicle_settings"),

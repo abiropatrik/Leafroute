@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<h1>Upload Work Schedules</h1>
+
+<!-- Form for CSV Upload -->
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <label for="csv_file">Upload CSV File:</label>
+    <input type="file" name="csv_file" id="csv_file" accept=".csv">
+    <button type="submit">Upload</button>
+</form>
+
+<hr>
+
+<!-- Form for Manual Entry -->
+<h2>Manual Entry</h2>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Add Work Schedule</button>
+</form>
+
+{% if messages %}
+  <ul class="messages">
+    {% for message in messages %}
+      <li class="{{ message.tags }}">{{ message }}</li>
+    {% endfor %}
+  </ul>
+{% endif %}
+
+
+
+
+{% endblock %}
