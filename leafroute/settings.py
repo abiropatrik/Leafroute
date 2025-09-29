@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'leafroute.apps.accounts',
     'leafroute.apps.internal',
     'leafroute.apps.internal_stage',
+    'leafroute.apps.internal_dm',
 ]
 
 MIDDLEWARE = [
