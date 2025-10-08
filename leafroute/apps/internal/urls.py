@@ -10,4 +10,5 @@ urlpatterns = [
     path('internal/vehicle_settings', views.vehicle_settings, name="vehicle_settings"),
     path('internal/warehouse_settings', views.warehouse_settings, name="warehouse_settings"),
     path('internal/dashboards', views.dashboards, name="dashboards"),
+    path('internal/shipments', views.shipments, name="shipments"),
 ]

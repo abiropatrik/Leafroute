@@ -61,26 +61,31 @@ def workschedule(request: HttpRequest) -> HttpResponse:
         return render(request, 'internal/workschedule.html', {'form': form})
 
 @login_required
-@permission_or_required('accounts.organiser_tasks')
+@permission_or_required('internal.organiser_tasks')
 def new_transport(request: HttpRequest) -> HttpResponse:
     return render(request,'internal/new_transport.html')
 
 @login_required
-@permission_required('accounts.organiser_tasks', raise_exception=True)
+@permission_required('internal.organiser_tasks', raise_exception=True)
 def new_route(request: HttpRequest) -> HttpResponse:
     return render(request,'internal/new_route.html')
 
 @login_required
-@permission_required('accounts.organiser_tasks', raise_exception=True)
+@permission_required('internal.organiser_tasks', raise_exception=True)
 def vehicle_settings(request: HttpRequest) -> HttpResponse:
     return render(request,'internal/vehicle_settings.html')
 
 @login_required
-@permission_required('accounts.organiser_tasks', raise_exception=True)
+@permission_required('internal.organiser_tasks', raise_exception=True)
 def warehouse_settings(request: HttpRequest) -> HttpResponse:
     return render(request,'internal/warehouse_settings.html')
 
 @login_required
-@permission_or_required('accounts.organiser_tasks','accounts.manager_tasks')
+@permission_or_required('internal.organiser_tasks','internal.manager_tasks')
 def dashboards(request: HttpRequest) -> HttpResponse:
     return render(request,'internal/dashboards.html')
+
+@login_required
+@permission_or_required('internal.driver_tasks')
+def shipments(request: HttpRequest) -> HttpResponse:
+    return render(request,'internal/shipments.html')

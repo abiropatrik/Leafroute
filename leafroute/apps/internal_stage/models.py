@@ -55,13 +55,6 @@ class UserProfile_ST(models.Model):
 
     class Meta:
         db_table = "Users_ST"
-        permissions = [
-            ("admin_tasks", "Is able to proceed with admin related tasks"),
-            ("organiser_tasks", "Is able to proceed with tasks related to organisers"),
-            ("driver_tasks", "Is able to proceed with tasks related to drivers"),
-            ("warehouseman_tasks", "Is able to proceed with tasks related to warehousemen"),
-            ("manager_tasks", "Is able to proceed with tasks related to managers"),
-        ]
 
 
 class Warehouse_ST(models.Model):
