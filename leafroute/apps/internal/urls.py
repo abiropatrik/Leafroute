@@ -11,4 +11,6 @@ urlpatterns = [
     path('internal/warehouse_settings', views.warehouse_settings, name="warehouse_settings"),
     path('internal/dashboards', views.dashboards, name="dashboards"),
     path('internal/shipments', views.shipments, name="shipments"),
+    path('internal/workschedule/update/<int:pk>/', views.workschedule_update, name="workschedule_update"),
+    path('internal/workschedule/delete/<int:pk>/', views.workschedule_delete, name="workschedule_delete"),
 ]

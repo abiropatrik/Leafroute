@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse,HttpRequest
 from django.contrib.auth.decorators import login_required, permission_required
 from functools import wraps
@@ -34,7 +34,7 @@ def workschedule(request: HttpRequest) -> HttpResponse:
                 reader = csv.DictReader(decoded_file, delimiter=';')
                 for row in reader:
                     WorkSchedule_ST.objects.using('stage').create(
-                        user=row['user'],
+                        user=request.user.username,
                         work_day=row['work_day'],
                         start_time=row['start_time'],
                         end_time=row['end_time']
@@ -58,7 +58,9 @@ def workschedule(request: HttpRequest) -> HttpResponse:
 
     else:
         form = WorkScheduleForm()
-        return render(request, 'internal/workschedule.html', {'form': form})
+        # Query all work schedules ordered by work_day descending
+        work_schedules = WorkSchedule_ST.objects.using('stage').filter(user=request.user.username).order_by('-work_day')
+        return render(request, 'internal/workschedule.html', {'form': form, 'work_schedules': work_schedules})
 
 @login_required
 @permission_or_required('internal.organiser_tasks')
@@ -89,3 +91,27 @@ def dashboards(request: HttpRequest) -> HttpResponse:
 @permission_or_required('internal.driver_tasks')
 def shipments(request: HttpRequest) -> HttpResponse:
     return render(request,'internal/shipments.html')
+
+@login_required
+def workschedule_update(request: HttpRequest, pk: int) -> HttpResponse:
+    schedule = get_object_or_404(WorkSchedule_ST, pk=pk, user=request.user.username)
+    if request.method == 'POST':
+        form = WorkScheduleForm(request.POST, instance=schedule)
+        if form.is_valid():
+            instance = form.save(commit=False)
+            instance.save(using='stage')
+            messages.success(request, 'Work schedule updated successfully!')
+            return redirect('internal:workschedule')
+        else:
+            messages.error(request, 'Error updating work schedule.')
+    else:
+        form = WorkScheduleForm(instance=schedule)
+    return render(request, 'internal/workschedule_update.html', {'form': form})
+
+@login_required
+def workschedule_delete(request: HttpRequest, pk: int) -> HttpResponse:
+    schedule = get_object_or_404(WorkSchedule_ST, pk=pk, user=request.user.username)
+    if request.method == 'POST':
+        schedule.delete(using='stage')
+        messages.success(request, 'Work schedule deleted successfully!')
+        return redirect('internal:workschedule')
