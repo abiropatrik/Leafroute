@@ -1,70 +1,87 @@
 {% extends 'base.html' %}
 {% load static %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'theme/css/workschedule.css' %}?v=3">
+{% endblock %}
+
+{% block title %}Work Schedules{% endblock %}
+
 {% block content %}
-<h1>Upload Work Schedules</h1>
-
-<!-- Form for CSV Upload -->
-<form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    <label for="csv_file">Upload CSV File:</label>
-    <input type="file" name="csv_file" id="csv_file" accept=".csv">
-    <button type="submit">Upload</button>
-</form>
-
-<hr>
-
-<!-- Form for Manual Entry -->
-<h2>Manual Entry</h2>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Add Work Schedule</button>
-</form>
-
-<hr>
-
-<!-- Display Work Schedules -->
-<h2>Work Schedules</h2>
-<table>
-    <thead>
-        <tr>
-            <th>User</th>
-            <th>Work Day</th>
-            <th>Start Time</th>
-            <th>End Time</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for schedule in work_schedules %}
-        <tr>
-            <td>{{ schedule.user }}</td>
-            <td>{{ schedule.work_day }}</td>
-            <td>{{ schedule.start_time }}</td>
-            <td>{{ schedule.end_time }}</td>
-            <td>
-                <a href="{% url 'internal:workschedule_update' schedule.pk %}" class="btn btn-primary">Edit</a>
-                <form method="post" action="{% url 'internal:workschedule_delete' schedule.pk %}" style="display:inline;">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">Delete</button>
-                </form>
-            </td>
-        </tr>
-        {% empty %}
-        <tr>
-            <td colspan="5">No work schedules found.</td>
-        </tr>
+<div class="container">
+    <!-- Messages -->
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="alert {{ message.tags }}">{{ message }}</div>
         {% endfor %}
-    </tbody>
-</table>
+    </div>
+    {% endif %}
 
-{% if messages %}
-  <ul class="messages">
-    {% for message in messages %}
-      <li class="{{ message.tags }}">{{ message }}</li>
-    {% endfor %}
-  </ul>
-{% endif %}
+    <h1 class="page-title">Work Schedules</h1>
 
+    <div class="upload-container">
+   
+        <!-- Manual Entry Section -->
+        <div class="create-card">
+            <h2 class="card-title">Add Work Schedule Manually</h2>
+            <form method="post" class="form">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-primary">Add Work Schedule</button>
+            </form>
+        </div>     
+        <!-- Upload CSV Section -->
+        <div class="create-card">
+            <h2 class="card-title">Upload Work Schedules</h2>
+            <form method="post" enctype="multipart/form-data" class="form">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="csv_file">Upload CSV File:</label>
+                    <input type="file" name="csv_file" id="csv_file" accept=".csv" class="form-control">
+                </div>
+                <button type="submit" class="btn btn-primary">Upload</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Work Schedules Table -->
+    <div class="card">
+        <h2 class="card-title">Existing Work Schedules</h2>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Work Day</th>
+                        <th>Start Time</th>
+                        <th>End Time</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for schedule in work_schedules %}
+                    <tr>
+                        <td>{{ schedule.user }}</td>
+                        <td>{{ schedule.work_day }}</td>
+                        <td>{{ schedule.start_time }}</td>
+                        <td>{{ schedule.end_time }}</td>
+                        <td>
+                            <a href="{% url 'internal:workschedule_update' schedule.pk %}" class="btn btn-primary btn-sm">Edit</a>
+                            <form method="post" action="{% url 'internal:workschedule_delete' schedule.pk %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center">No work schedules found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 {% endblock %}
