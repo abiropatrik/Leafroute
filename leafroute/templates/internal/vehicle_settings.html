@@ -1,9 +1,143 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Járművek kezelése{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'theme/css/editdata.css' %}?v=3">
+{% endblock %}
+
+{% block title %}Járművek beállításai{% endblock %}
 
 {% block content %}
-<h1>
-    Járművek kezelése
-</h1>
+<div class="container">
+    <!-- Messages -->
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="alert {{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <h1 class="page-title">Járművek</h1>
+
+    <div class="upload-container">
+   
+        <!-- Manual Entry Section -->
+        <div class="create-card">
+            <h2 class="card-title">Új jármű hozzáadása manuálisan</h2>
+            <form method="post" class="form">
+                {% csrf_token %}
+                <div class="form-group">
+                    {{ form.work_day.label_tag }}
+                    {{ form.work_day }}
+                </div>
+                <div class="form-group">
+                    {{ form.model.label_tag }}
+                    {{ form.model }}
+                </div>
+                <div class="form-group">
+                    {{ form.production_year.label_tag }}
+                    {{ form.production_year }}
+                </div>
+                <div class="form-group">
+                    {{ form.type.label_tag }}
+                    {{ form.type }}
+                </div>
+                <div class="form-group">
+                    {{ form.fuel_type.label_tag }}
+                    {{ form.fuel_type }}
+                </div>
+                <div class="form-group">
+                    {{ form.consumption.label_tag }}
+                    {{ form.consumption }}
+                </div>
+                <div class="form-group">
+                    {{ form.full_capacity.label_tag }}
+                    {{ form.full_capacity }}
+                </div>
+                <div class="form-group">
+                    {{ form.free_capacity.label_tag }}
+                    {{ form.free_capacity }}
+                </div>
+                <div class="form-group">
+                    {{ form.status.label_tag }}
+                    {{ form.status }}
+                </div>
+                <div class="form-group">
+                    {{ form.avg_distance_per_hour.label_tag }}
+                    {{ form.avg_distance_per_hour }}
+                </div>
+                <div class="form-group">
+                    {{ form.fuel_cost.label_tag }}
+                    {{ form.fuel_cost }}
+                </div>
+                <button type="submit" class="btn btn-primary">Új jármű hozzáadása</button>
+            </form>
+        </div>     
+        <!-- Upload CSV Section -->
+        <div class="create-card">
+            <h2 class="card-title">Járművek feltöltése CSV fájlból</h2>
+            <form method="post" enctype="multipart/form-data" class="form">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="csv_file">CSV fájl feltöltése:</label>
+                    <input type="file" name="csv_file" id="csv_file" accept=".csv" class="form-control">
+                </div>
+                <button type="submit" class="btn btn-primary">Feltöltés</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2 class="card-title">Felvett járművek</h2>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Brand</th>
+                        <th>Model</th>
+                        <th>Production Year</th>
+                        <th>Type</th>
+                        <th>Fuel Type</th>
+                        <th>Consumption</th>
+                        <th>Full Capacity</th>
+                        <th>Free Capacity</th>
+                        <th>Status</th>
+                        <th>Avg Distance/Hour</th>
+                        <th>Fuel Cost</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for vehicle in vehicles %}
+                    <tr>
+                        <td>{{ vehicle.brand }}</td>
+                        <td>{{ vehicle.model }}</td>
+                        <td>{{ vehicle.production_year }}</td>
+                        <td>{{ vehicle.type }}</td>
+                        <td>{{ vehicle.fuel_type }}</td>
+                        <td>{{ vehicle.consumption }}</td>
+                        <td>{{ vehicle.full_capacity }}</td>
+                        <td>{{ vehicle.free_capacity }}</td>
+                        <td>{{ vehicle.status }}</td>
+                        <td>{{ vehicle.avg_distance_per_hour }}</td>
+                        <td>{{ vehicle.fuel_cost }}</td>
+                        <td>
+                            <a href="{% url 'internal:vehicle_update' vehicle.pk %}" class="btn btn-primary btn-sm">Edit</a>
+                            <form method="post" action="{% url 'internal:vehicle_delete' vehicle.pk %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center">Nincs felvett jármű.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 {% endblock %}

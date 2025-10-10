@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'theme/css/editdata.css' %}?v=3">
+{% endblock %}
+
+
+{% block content %}
+<h1>Új jármű hozzáadása manuálisan</h1>
+    <form method="post">
+        {% csrf_token %}
+        <div class="create-card">
+                <form method="post" class="form">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        {{ form.work_day.label_tag }}
+                        {{ form.work_day }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.model.label_tag }}
+                        {{ form.model }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.production_year.label_tag }}
+                        {{ form.production_year }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.type.label_tag }}
+                        {{ form.type }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.fuel_type.label_tag }}
+                        {{ form.fuel_type }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.consumption.label_tag }}
+                        {{ form.consumption }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.full_capacity.label_tag }}
+                        {{ form.full_capacity }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.free_capacity.label_tag }}
+                        {{ form.free_capacity }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.status.label_tag }}
+                        {{ form.status }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.avg_distance_per_hour.label_tag }}
+                        {{ form.avg_distance_per_hour }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.fuel_cost.label_tag }}
+                        {{ form.fuel_cost }}
+                    </div>
+                    <button type="submit" class="btn btn-primary">Update</button>
+                    <a href="{% url 'internal:vehicle_settings' %}" class="btn btn-secondary">Cancel</a>
+                </form>
+            </div> 
+    </form>
+{% endblock %}  

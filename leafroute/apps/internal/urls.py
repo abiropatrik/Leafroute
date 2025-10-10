@@ -13,4 +13,6 @@ urlpatterns = [
     path('internal/shipments', views.shipments, name="shipments"),
     path('internal/workschedule/update/<int:pk>/', views.workschedule_update, name="workschedule_update"),
     path('internal/workschedule/delete/<int:pk>/', views.workschedule_delete, name="workschedule_delete"),
+    path('internal/vehicle/delete/<int:pk>/', views.vehicle_delete, name="vehicle_delete"),
+    path('internal/vehicle/update/<int:pk>/', views.vehicle_update, name="vehicle_update"),
 ]

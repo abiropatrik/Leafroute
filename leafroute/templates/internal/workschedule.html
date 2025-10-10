@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'theme/css/workschedule.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'theme/css/editdata.css' %}?v=3">
 {% endblock %}
 
 {% block title %}Work Schedules{% endblock %}
@@ -27,7 +27,18 @@
             <h2 class="card-title">Add Work Schedule Manually</h2>
             <form method="post" class="form">
                 {% csrf_token %}
-                {{ form.as_p }}
+                <div class="form-group">
+                    {{ form.work_day.label_tag }}
+                    {{ form.work_day }}
+                </div>
+                <div class="form-group">
+                    {{ form.start_time.label_tag }}
+                    {{ form.start_time }}
+                </div>
+                <div class="form-group">
+                    {{ form.end_time.label_tag }}
+                    {{ form.end_time }}
+                </div>
                 <button type="submit" class="btn btn-primary">Add Work Schedule</button>
             </form>
         </div>     

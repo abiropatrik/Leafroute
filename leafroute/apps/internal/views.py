@@ -5,8 +5,8 @@ from functools import wraps
 from django.core.exceptions import PermissionDenied
 import csv
 from django.contrib import messages
-from leafroute.apps.internal_stage.models import WorkSchedule_ST
-from leafroute.apps.internal.forms import WorkScheduleForm
+from leafroute.apps.internal_stage.models import WorkSchedule_ST,Vehicle_ST
+from leafroute.apps.internal.forms import WorkScheduleForm,VehicleForm
 
 
 def permission_or_required(*perms):
@@ -61,6 +61,56 @@ def workschedule(request: HttpRequest) -> HttpResponse:
         # Query all work schedules ordered by work_day descending
         work_schedules = WorkSchedule_ST.objects.using('stage').filter(user=request.user.username).order_by('-work_day')
         return render(request, 'internal/workschedule.html', {'form': form, 'work_schedules': work_schedules})
+    
+@login_required
+@permission_required('internal.organiser_tasks', raise_exception=True)
+def vehicle_settings(request: HttpRequest) -> HttpResponse:
+    if request.method == 'POST':
+        # Handle CSV Upload
+        if 'csv_file' in request.FILES:
+            csv_file = request.FILES['csv_file']
+            if not csv_file.name.endswith('.csv'):
+                messages.error(request, 'Please upload a valid CSV file.')
+                return redirect('internal: vehicle_settings')
+
+            try:
+                decoded_file = csv_file.read().decode('utf-8').splitlines()
+                reader = csv.DictReader(decoded_file, delimiter=';')
+                for row in reader:
+                    Vehicle_ST.objects.using('stage').create(
+                        brand=row['brand'], #nincs pk megadva, jó lesz így?
+                        model=row['model'],
+                        production_year=row['production_year'],
+                        type=row['type'],
+                        fuel_type=row['fuel_type'],
+                        consumption=row['consumption'],
+                        full_capacity=row['full_capacity'],
+                        free_capacity=row['free_capacity'],
+                        status=row['status'],
+                        avg_distance_per_hour=row['avg_distance_per_hour'],
+                        fuel_cost=row['fuel_cost']
+                    )
+                messages.success(request, 'Vehicle uploaded successfully!')
+            except Exception as e:
+                messages.error(request, f"Error uploading CSV: {e}")
+            return redirect('internal:vehicle_settings')
+
+        # Handle Manual Entry
+        else:
+            form = VehicleForm(request.POST)
+            if form.is_valid():
+                instance = form.save(commit=False)
+                instance.user = request.user.username
+                instance.save(using='stage')
+                messages.success(request, 'Vehicle added successfully!')
+            else:
+                messages.error(request, 'Error adding vehicle.')
+            return redirect('internal:vehicle_settings')
+
+    else:
+        form = VehicleForm()
+        vehicles = Vehicle_ST.objects.using('stage')
+        return render(request, 'internal/vehicle_settings.html', {'form': form, 'vehicles': vehicles})
 
 @login_required
 @permission_or_required('internal.organiser_tasks')
@@ -71,11 +121,6 @@ def new_transport(request: HttpRequest) -> HttpResponse:
 @permission_required('internal.organiser_tasks', raise_exception=True)
 def new_route(request: HttpRequest) -> HttpResponse:
     return render(request,'internal/new_route.html')
-
-@login_required
-@permission_required('internal.organiser_tasks', raise_exception=True)
-def vehicle_settings(request: HttpRequest) -> HttpResponse:
-    return render(request,'internal/vehicle_settings.html')
 
 @login_required
 @permission_required('internal.organiser_tasks', raise_exception=True)
@@ -115,3 +160,30 @@ def workschedule_delete(request: HttpRequest, pk: int) -> HttpResponse:
         schedule.delete(using='stage')
         messages.success(request, 'Work schedule deleted successfully!')
         return redirect('internal:workschedule')
+    
+@login_required
+@permission_required('internal.organiser_tasks', raise_exception=True)
+def vehicle_update(request: HttpRequest, pk: int) -> HttpResponse:
+    vehicle = get_object_or_404(Vehicle_ST, pk=pk)
+    if request.method == 'POST':
+        form = VehicleForm(request.POST, instance=vehicle)
+        if form.is_valid():
+            instance = form.save(commit=False)
+            instance.save(using='stage')
+            messages.success(request, 'Vehicle updated successfully!')
+            return redirect('internal:vehicle_settings')
+        else:
+            messages.error(request, 'Error updating vehicle.')
+    else:
+        form = VehicleForm(instance=vehicle)
+    return render(request, 'internal/vehicle_update.html', {'form': form})
+
+@login_required
+@permission_required('internal.organiser_tasks', raise_exception=True)
+def vehicle_delete(request: HttpRequest, pk: int) -> HttpResponse:
+    vehicle = get_object_or_404(Vehicle_ST, pk=pk)
+    if request.method == 'POST':
+        vehicle.delete(using='stage')
+        messages.success(request, 'Vehicle deleted successfully!')
+        return redirect('internal:vehicle_settings')
+    return render(request, 'internal/vehicle_delete.html', {'vehicle': vehicle})
