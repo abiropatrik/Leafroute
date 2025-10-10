@@ -1,5 +1,5 @@
 from django import forms
-from leafroute.apps.internal_stage.models import WorkSchedule_ST,Vehicle_ST
+from leafroute.apps.internal_stage.models import Warehouse_ST, WorkSchedule_ST,Vehicle_ST
 
 class WorkScheduleForm(forms.ModelForm):
     class Meta:
@@ -81,5 +81,34 @@ class VehicleForm(forms.ModelForm):
             attrs={'class': 'form-control'}
         )
         self.fields['fuel_cost'].widget = forms.TextInput(
+            attrs={'class': 'form-control'}
+        )
+
+class WarehouseForm(forms.ModelForm):
+    class Meta:
+        model = Warehouse_ST
+        fields = ['address', 'capacity', 'fullness', 'contact_email']
+        labels = {
+            'address': 'Cím',
+            'capacity': 'Kapacitás',
+            'fullness': 'Telítettség',
+            'contact_email': 'Kapcsolattartó email',
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Calendar for address
+        self.fields['address'].widget = forms.TextInput(
+            attrs={'class': 'form-control'}
+        )
+        # Time pickers
+        self.fields['capacity'].widget = forms.NumberInput(
+            attrs={'class': 'form-control'}
+        )
+        self.fields['fullness'].widget = forms.NumberInput(
+            attrs={'class': 'form-control'}
+        )
+        self.fields['contact_email'].widget = forms.TextInput(
             attrs={'class': 'form-control'}
         )

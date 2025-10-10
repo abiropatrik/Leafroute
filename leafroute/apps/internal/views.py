@@ -5,8 +5,8 @@ from functools import wraps
 from django.core.exceptions import PermissionDenied
 import csv
 from django.contrib import messages
-from leafroute.apps.internal_stage.models import WorkSchedule_ST,Vehicle_ST
-from leafroute.apps.internal.forms import WorkScheduleForm,VehicleForm
+from leafroute.apps.internal_stage.models import WorkSchedule_ST,Vehicle_ST,Warehouse_ST
+from leafroute.apps.internal.forms import WorkScheduleForm,VehicleForm,WarehouseForm
 
 
 def permission_or_required(*perms):
@@ -78,7 +78,7 @@ def vehicle_settings(request: HttpRequest) -> HttpResponse:
                 reader = csv.DictReader(decoded_file, delimiter=';')
                 for row in reader:
                     Vehicle_ST.objects.using('stage').create(
-                        brand=row['brand'], #nincs pk megadva, jó lesz így?
+                        brand=row['brand'], #no pk. will this work?
                         model=row['model'],
                         production_year=row['production_year'],
                         type=row['type'],
@@ -125,7 +125,45 @@ def new_route(request: HttpRequest) -> HttpResponse:
 @login_required
 @permission_required('internal.organiser_tasks', raise_exception=True)
 def warehouse_settings(request: HttpRequest) -> HttpResponse:
-    return render(request,'internal/warehouse_settings.html')
+    if request.method == 'POST':
+        # Handle CSV Upload
+        if 'csv_file' in request.FILES:
+            csv_file = request.FILES['csv_file']
+            if not csv_file.name.endswith('.csv'):
+                messages.error(request, 'Please upload a valid CSV file.')
+                return redirect('internal: warehouse_settings')
+
+            try:
+                decoded_file = csv_file.read().decode('utf-8').splitlines()
+                reader = csv.DictReader(decoded_file, delimiter=';')
+                for row in reader:
+                    Warehouse_ST.objects.using('stage').create(
+                        address=row['address'], #no pk. will this work?
+                        capacity=row['capacity'],
+                        fullness=row['fullness'],
+                        contact_email=row['contact_email'],
+                    )
+                messages.success(request, 'Warehouse uploaded successfully!')
+            except Exception as e:
+                messages.error(request, f"Error uploading CSV: {e}")
+            return redirect('internal:warehouse_settings')
+
+        # Handle Manual Entry
+        else:
+            form = WarehouseForm(request.POST)
+            if form.is_valid():
+                instance = form.save(commit=False)
+                instance.user = request.user.username
+                instance.save(using='stage')
+                messages.success(request, 'Warehouse added successfully!')
+            else:
+                messages.error(request, 'Error adding warehouse.')
+            return redirect('internal:warehouse_settings')
+
+    else:
+        form = WarehouseForm()
+        warehouses = Warehouse_ST.objects.using('stage')
+        return render(request, 'internal/warehouse_settings.html', {'form': form, 'warehouses': warehouses})
 
 @login_required
 @permission_or_required('internal.organiser_tasks','internal.manager_tasks')

@@ -5,7 +5,7 @@
 <link rel="stylesheet" href="{% static 'theme/css/editdata.css' %}?v=3">
 {% endblock %}
 
-{% block title %}Work Schedules{% endblock %}
+{% block title %}Munkaidőm{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -18,13 +18,13 @@
     </div>
     {% endif %}
 
-    <h1 class="page-title">Work Schedules</h1>
+    <h1 class="page-title">Munkaidőm</h1>
 
     <div class="upload-container">
    
         <!-- Manual Entry Section -->
         <div class="create-card">
-            <h2 class="card-title">Add Work Schedule Manually</h2>
+            <h2 class="card-title">Munkaidő hozzáadása manuálisan</h2>
             <form method="post" class="form">
                 {% csrf_token %}
                 <div class="form-group">
@@ -39,26 +39,26 @@
                     {{ form.end_time.label_tag }}
                     {{ form.end_time }}
                 </div>
-                <button type="submit" class="btn btn-primary">Add Work Schedule</button>
+                <button type="submit" class="btn btn-primary">Munkaidő hozzáadása</button>
             </form>
         </div>     
         <!-- Upload CSV Section -->
         <div class="create-card">
-            <h2 class="card-title">Upload Work Schedules</h2>
+            <h2 class="card-title">Munkaidők feltöltése CSV fájlból</h2>
             <form method="post" enctype="multipart/form-data" class="form">
                 {% csrf_token %}
                 <div class="form-group">
-                    <label for="csv_file">Upload CSV File:</label>
+                    <label for="csv_file">CSV fájl feltöltése:</label>
                     <input type="file" name="csv_file" id="csv_file" accept=".csv" class="form-control">
                 </div>
-                <button type="submit" class="btn btn-primary">Upload</button>
+                <button type="submit" class="btn btn-primary">Feltöltés</button>
             </form>
         </div>
     </div>
 
     <!-- Work Schedules Table -->
     <div class="card">
-        <h2 class="card-title">Existing Work Schedules</h2>
+        <h2 class="card-title">Felvett munkaidők</h2>
         <div class="table-responsive">
             <table class="table">
                 <thead>
