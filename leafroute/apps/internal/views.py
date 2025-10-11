@@ -5,8 +5,8 @@ from functools import wraps
 from django.core.exceptions import PermissionDenied
 import csv
 from django.contrib import messages
-from leafroute.apps.internal_stage.models import WorkSchedule_ST,Vehicle_ST,Warehouse_ST,Address_ST,City_ST
-from leafroute.apps.internal.forms import WorkScheduleForm,VehicleForm,WarehouseForm,AddressForm,CityForm
+from leafroute.apps.internal_stage.models import WarehouseConnection_ST, WorkSchedule_ST,Vehicle_ST,Warehouse_ST,Address_ST,City_ST
+from leafroute.apps.internal.forms import WarehouseConnectionForm, WorkScheduleForm,VehicleForm,WarehouseForm,AddressForm,CityForm
 
 
 def permission_or_required(*perms):
@@ -120,7 +120,39 @@ def new_transport(request: HttpRequest) -> HttpResponse:
 @login_required
 @permission_required('internal.organiser_tasks', raise_exception=True)
 def new_route(request: HttpRequest) -> HttpResponse:
-    return render(request,'internal/new_route.html')
+    if request.method == 'POST':
+        warehouse_conn_form= WarehouseConnectionForm(request.POST)
+        warehouse_form= WarehouseForm(request.POST)
+        address_form = AddressForm(request.POST)
+        city_form= CityForm(request.POST)
+        if warehouse_conn_form.is_valid():
+            city_instance = city_form.save(commit=False)
+            city_instance.save(using='stage')
+            address_instance = address_form.save(commit=False)
+            address_instance.city = city_instance
+            address_instance.save(using='stage')
+            warehouse_instance= warehouse_form.save(commit=False)
+            warehouse_instance.address = address_instance
+            warehouse_instance.save(using='stage')
+            warehouse_conn_instance = warehouse_conn_form.save(commit=False)
+            warehouse_conn_instance.warehouse1 = warehouse_instance
+            warehouse_conn_instance.warehouse2 = warehouse_instance
+            warehouse_conn_instance.save(using='stage')
+            messages.success(request, 'New route added successfully!')
+        else:
+            messages.error(request, 'Error adding route.')
+        return redirect('internal:new_route')
+
+    else:
+        warehouse_conn_form= WarehouseConnectionForm()
+        warehouseconnections = WarehouseConnection_ST.objects.using('stage')
+        warehouse_form= WarehouseForm()
+        warehouses= Warehouse_ST.objects.using('stage')
+        address_form = AddressForm()
+        addresses= Address_ST.objects.using('stage')
+        city_form= CityForm()
+        cities= City_ST.objects.using('stage')
+        return render(request, 'internal/new_route.html', {'warehouse_conn_form': warehouse_conn_form, 'warehouseconnections': warehouseconnections, 'warehouse_form': warehouse_form, 'warehouses': warehouses, 'address_form': address_form, 'addresses': addresses, 'city_form': city_form, 'cities': cities})
 
 @login_required
 @permission_required('internal.organiser_tasks', raise_exception=True)

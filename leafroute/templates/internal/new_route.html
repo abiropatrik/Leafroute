@@ -1,9 +1,51 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'theme/css/editdata.css' %}?v=3">
+{% endblock %}
 
 {% block title %}Új útvonal felvétele{% endblock %}
 
 {% block content %}
-<h1>
-    Új útvonal felvétele
-</h1>
+<div class="container">
+    <!-- Messages -->
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="alert {{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <h1 class="page-title">Új útvonal felvétele</h1>
+
+    <div class="upload-container">
+   
+        <!-- Manual Entry Section -->
+        <div class="create-card">
+            <h2 class="card-title">Új útvonal hozzáadása manuálisan</h2>
+            <form method="post" class="form">
+                {% csrf_token %}
+                <div class="form-group">
+                    {{ warehouse_conn_form.warehouse1.label_tag }}
+                    {{ warehouse_conn_form.warehouse1 }}
+                </div>
+                <div class="form-group">
+                    {{ warehouse_conn_form.warehouse2.label_tag }}
+                    {{ warehouse_conn_form.warehouse2 }}
+                </div>
+                <div class="form-group">
+                    {{ warehouse_conn_form.is_in_different_country.label_tag }}
+                    {{ warehouse_conn_form.is_in_different_country }}
+                </div>
+                <div class="form-group">
+                    {{ warehouse_conn_form.is_in_different_continent.label_tag }}
+                    {{ warehouse_conn_form.is_in_different_continent }}
+                </div>
+                <button type="submit" class="btn btn-primary">Útvonal hozzáadása</button>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock %}

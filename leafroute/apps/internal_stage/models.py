@@ -69,6 +69,9 @@ class Warehouse_ST(models.Model):
     class Meta:
         db_table = "Warehouses_ST"
 
+    def __str__(self):
+        return f"{self.address.institution_name}"    
+
 
 
 class WarehouseConnection_ST(models.Model):
