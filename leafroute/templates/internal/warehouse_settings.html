@@ -5,7 +5,7 @@
 <link rel="stylesheet" href="{% static 'theme/css/editdata.css' %}?v=3">
 {% endblock %}
 
-{% block title %}Work Schedules{% endblock %}
+{% block title %}Raktárak felvétele{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -27,37 +27,43 @@
             <h2 class="card-title">Raktár hozzáadása manuálisan</h2>
             <form method="post" class="form">
                 {% csrf_token %}
+                <h4>Raktár címe</h4>
                 <div class="form-group">
-                    {{ form.address.label_tag }}
-                    {{ form.address }}
+                    {{ city_form.country.label_tag }}
+                    {{ city_form.country }}
                 </div>
                 <div class="form-group">
-                    {{ form.capacity.label_tag }}
-                    {{ form.capacity }}
+                    {{ city_form.name.label_tag }}
+                    {{ city_form.name }}
                 </div>
                 <div class="form-group">
-                    {{ form.fullness.label_tag }}
-                    {{ form.fullness }}
+                    {{ address_form.street.label_tag }}
+                    {{ address_form.street }}
                 </div>
                 <div class="form-group">
-                    {{ form.contact_email.label_tag }}
-                    {{ form.contact_email }}
+                    {{ address_form.house_number.label_tag }}
+                    {{ address_form.house_number }}
+                </div>
+                <div class="form-group">
+                    {{ address_form.institution_name.label_tag }}
+                    {{ address_form.institution_name }}
+                </div>
+                <h4>Raktár adatai</h4>
+                <div class="form-group">
+                    {{ warehouse_form.capacity.label_tag }}
+                    {{ warehouse_form.capacity }}
+                </div>
+                <div class="form-group">
+                    {{ warehouse_form.fullness.label_tag }}
+                    {{ warehouse_form.fullness }}
+                </div>
+                <div class="form-group">
+                    {{ warehouse_form.contact_email.label_tag }}
+                    {{ warehouse_form.contact_email }}
                 </div>
                 <button type="submit" class="btn btn-primary">Raktár hozzáadása</button>
             </form>
         </div>     
-        <!-- Upload CSV Section -->
-        <div class="create-card">
-            <h2 class="card-title">Raktárak feltöltése CSV fájlból</h2>
-            <form method="post" enctype="multipart/form-data" class="form">
-                {% csrf_token %}
-                <div class="form-group">
-                    <label for="csv_file">CSV fájl feltöltése:</label>
-                    <input type="file" name="csv_file" id="csv_file" accept=".csv" class="form-control">
-                </div>
-                <button type="submit" class="btn btn-primary">Feltöltés</button>
-            </form>
-        </div>
     </div>
 
     <!-- Work Schedules Table -->

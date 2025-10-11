@@ -27,6 +27,8 @@ class Address_ST(models.Model):
     class Meta:
         db_table = "Addresses_ST"
 
+    def __str__(self):
+        return f"{self.city.country}, {self.city.name} {self.street} {self.house_number}"
 
 
 class UserProfile_ST(models.Model):

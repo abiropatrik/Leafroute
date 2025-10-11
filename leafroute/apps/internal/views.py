@@ -5,8 +5,8 @@ from functools import wraps
 from django.core.exceptions import PermissionDenied
 import csv
 from django.contrib import messages
-from leafroute.apps.internal_stage.models import WorkSchedule_ST,Vehicle_ST,Warehouse_ST
-from leafroute.apps.internal.forms import WorkScheduleForm,VehicleForm,WarehouseForm
+from leafroute.apps.internal_stage.models import WorkSchedule_ST,Vehicle_ST,Warehouse_ST,Address_ST,City_ST
+from leafroute.apps.internal.forms import WorkScheduleForm,VehicleForm,WarehouseForm,AddressForm,CityForm
 
 
 def permission_or_required(*perms):
@@ -126,44 +126,31 @@ def new_route(request: HttpRequest) -> HttpResponse:
 @permission_required('internal.organiser_tasks', raise_exception=True)
 def warehouse_settings(request: HttpRequest) -> HttpResponse:
     if request.method == 'POST':
-        # Handle CSV Upload
-        if 'csv_file' in request.FILES:
-            csv_file = request.FILES['csv_file']
-            if not csv_file.name.endswith('.csv'):
-                messages.error(request, 'Please upload a valid CSV file.')
-                return redirect('internal: warehouse_settings')
-
-            try:
-                decoded_file = csv_file.read().decode('utf-8').splitlines()
-                reader = csv.DictReader(decoded_file, delimiter=';')
-                for row in reader:
-                    Warehouse_ST.objects.using('stage').create(
-                        address=row['address'], #no pk. will this work?
-                        capacity=row['capacity'],
-                        fullness=row['fullness'],
-                        contact_email=row['contact_email'],
-                    )
-                messages.success(request, 'Warehouse uploaded successfully!')
-            except Exception as e:
-                messages.error(request, f"Error uploading CSV: {e}")
-            return redirect('internal:warehouse_settings')
-
-        # Handle Manual Entry
+        warehouse_form = WarehouseForm(request.POST)
+        address_form = AddressForm(request.POST)
+        city_form= CityForm(request.POST)
+        if address_form.is_valid() and warehouse_form.is_valid() and city_form.is_valid():
+            city_instance = city_form.save(commit=False)
+            city_instance.save(using='stage')
+            address_instance = address_form.save(commit=False)
+            address_instance.city = city_instance
+            address_instance.save(using='stage')
+            warehouse_instance = warehouse_form.save(commit=False)
+            warehouse_instance.address = address_instance
+            warehouse_instance.save(using='stage')
+            messages.success(request, 'Warehouse added successfully!')
         else:
-            form = WarehouseForm(request.POST)
-            if form.is_valid():
-                instance = form.save(commit=False)
-                instance.user = request.user.username
-                instance.save(using='stage')
-                messages.success(request, 'Warehouse added successfully!')
-            else:
-                messages.error(request, 'Error adding warehouse.')
-            return redirect('internal:warehouse_settings')
+            messages.error(request, 'Error adding warehouse.')
+        return redirect('internal:warehouse_settings')
 
     else:
-        form = WarehouseForm()
+        warehouse_form = WarehouseForm()
         warehouses = Warehouse_ST.objects.using('stage')
-        return render(request, 'internal/warehouse_settings.html', {'form': form, 'warehouses': warehouses})
+        address_form = AddressForm()
+        addresses= Address_ST.objects.using('stage')
+        city_form= CityForm()
+        cities= City_ST.objects.using('stage')
+        return render(request, 'internal/warehouse_settings.html', {'warehouse_form': warehouse_form, 'warehouses': warehouses, 'address_form': address_form, 'addresses': addresses, 'city_form': city_form, 'cities': cities})
 
 @login_required
 @permission_or_required('internal.organiser_tasks','internal.manager_tasks')
@@ -225,3 +212,30 @@ def vehicle_delete(request: HttpRequest, pk: int) -> HttpResponse:
         messages.success(request, 'Vehicle deleted successfully!')
         return redirect('internal:vehicle_settings')
     return render(request, 'internal/vehicle_delete.html', {'vehicle': vehicle})
+
+@login_required
+@permission_required('internal.organiser_tasks', raise_exception=True)
+def warehouse_update(request: HttpRequest, pk: int) -> HttpResponse:
+    warehouse = get_object_or_404(Warehouse_ST, pk=pk)
+    if request.method == 'POST':
+        form = WarehouseForm(request.POST, instance=warehouse)
+        if form.is_valid():
+            instance = form.save(commit=False)
+            instance.save(using='stage')
+            messages.success(request, 'Warehouse updated successfully!')
+            return redirect('internal:warehouse_settings')
+        else:
+            messages.error(request, 'Error updating warehouse.')
+    else:
+        form = WarehouseForm(instance=warehouse)
+    return render(request, 'internal/warehouse_update.html', {'form': form})
+
+@login_required
+@permission_required('internal.organiser_tasks', raise_exception=True)
+def warehouse_delete(request: HttpRequest, pk: int) -> HttpResponse:
+    warehouse = get_object_or_404(Warehouse_ST, pk=pk)
+    if request.method == 'POST':
+        warehouse.delete(using='stage')
+        messages.success(request, 'Warehouse deleted successfully!')
+        return redirect('internal:warehouse_settings')
+    return render(request, 'internal/warehouse_delete.html', {'warehouse': warehouse})

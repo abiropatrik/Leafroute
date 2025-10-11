@@ -1,5 +1,5 @@
 from django import forms
-from leafroute.apps.internal_stage.models import Warehouse_ST, WorkSchedule_ST,Vehicle_ST
+from leafroute.apps.internal_stage.models import Address_ST, City_ST, Warehouse_ST, WorkSchedule_ST,Vehicle_ST
 
 class WorkScheduleForm(forms.ModelForm):
     class Meta:
@@ -87,9 +87,8 @@ class VehicleForm(forms.ModelForm):
 class WarehouseForm(forms.ModelForm):
     class Meta:
         model = Warehouse_ST
-        fields = ['address', 'capacity', 'fullness', 'contact_email']
+        fields = ['capacity', 'fullness', 'contact_email']
         labels = {
-            'address': 'Cím',
             'capacity': 'Kapacitás',
             'fullness': 'Telítettség',
             'contact_email': 'Kapcsolattartó email',
@@ -98,10 +97,6 @@ class WarehouseForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Calendar for address
-        self.fields['address'].widget = forms.TextInput(
-            attrs={'class': 'form-control'}
-        )
         # Time pickers
         self.fields['capacity'].widget = forms.NumberInput(
             attrs={'class': 'form-control'}
@@ -110,5 +105,64 @@ class WarehouseForm(forms.ModelForm):
             attrs={'class': 'form-control'}
         )
         self.fields['contact_email'].widget = forms.TextInput(
+            attrs={'class': 'form-control'}
+        )
+
+class AddressForm(forms.ModelForm):
+    class Meta:
+        model = Address_ST
+        fields = [ 'street', 'house_number']
+        labels = {
+            'street': 'Utca',
+            'house_number': 'Házszám',
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields['street'].widget = forms.TextInput(
+            attrs={'class': 'form-control'}
+        )
+        self.fields['house_number'].widget = forms.TextInput(
+            attrs={'class': 'form-control'}
+        )
+
+
+class CityForm(forms.ModelForm):
+    class Meta:
+        model = City_ST
+        fields = [ 'country', 'continent','name','has_airport','has_harbour','longitude_coordinate','latitude_coordinate']
+        labels = {
+            'country': 'Ország',
+            'continent': 'Kontinens',
+            'name': 'Város neve',
+            'has_airport': 'Van repülőtere?',
+            'has_harbour': 'Van kikötője?',
+            'longitude_coordinate': 'Hosszúsági fok',
+            'latitude_coordinate': 'Szélességi fok',
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields['country'].widget = forms.TextInput(
+            attrs={'class': 'form-control'}
+        )
+        self.fields['continent'].widget = forms.TextInput(
+            attrs={'class': 'form-control'}
+        )
+        self.fields['name'].widget = forms.TextInput(
+            attrs={'class': 'form-control'}
+        )
+        self.fields['has_airport'].widget = forms.CheckboxInput(
+            attrs={'class': 'form-check-input'}
+        )
+        self.fields['has_harbour'].widget = forms.CheckboxInput(
+            attrs={'class': 'form-check-input'}
+        )
+        self.fields['longitude_coordinate'].widget = forms.TextInput(
+            attrs={'class': 'form-control'}
+        )
+        self.fields['latitude_coordinate'].widget = forms.TextInput(
             attrs={'class': 'form-control'}
         )
