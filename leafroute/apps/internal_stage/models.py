@@ -84,6 +84,9 @@ class WarehouseConnection_ST(models.Model):
     class Meta:
         db_table = "WarehouseConnections_ST"
 
+    def __str__(self):
+        return f"{self.warehouse1.address.institution_name} -> {self.warehouse2.address.institution_name}"    
+
 
 
 class Route_ST(models.Model):
@@ -93,6 +96,8 @@ class Route_ST(models.Model):
     class Meta:
         db_table = "Routes_ST"
 
+    def __str__(self):
+        return f"{self.warehouse_connection.warehouse1.address.institution_name} -> {self.warehouse_connection.warehouse2.address.institution_name}"
 
 
 class RoutePart_ST(models.Model):

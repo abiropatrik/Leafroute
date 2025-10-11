@@ -1,5 +1,5 @@
 from django import forms
-from leafroute.apps.internal_stage.models import Address_ST, City_ST, Warehouse_ST, WarehouseConnection_ST, WorkSchedule_ST,Vehicle_ST
+from leafroute.apps.internal_stage.models import Address_ST, City_ST, Route_ST, Warehouse_ST, WarehouseConnection_ST, WorkSchedule_ST,Vehicle_ST
 
 class WorkScheduleForm(forms.ModelForm):
     class Meta:
@@ -108,6 +108,21 @@ class WarehouseForm(forms.ModelForm):
             attrs={'class': 'form-control'}
         )
 
+class RouteForm(forms.ModelForm):
+    class Meta:
+        model = Route_ST
+        fields = ['warehouse_connection']
+        labels = {
+            'warehouse_connection': 'Raktár kapcsolat',
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['warehouse_connection'].required = False
+        self.fields['warehouse_connection'].queryset = WarehouseConnection_ST.objects.using('stage').all()
+        self.fields['warehouse_connection'].widget.attrs.update({'class': 'form-control'})
+
+
 class WarehouseConnectionForm(forms.ModelForm):
     class Meta:
         model = WarehouseConnection_ST
@@ -125,9 +140,6 @@ class WarehouseConnectionForm(forms.ModelForm):
         self.fields['warehouse1'].queryset = Warehouse_ST.objects.using('stage').all()
         self.fields['warehouse2'].queryset = Warehouse_ST.objects.using('stage').all()
 
-        # self.fields['warehouse1'].widget = forms.Select(
-        #     attrs={'class': 'form-control'}
-        # )
         self.fields['warehouse1'].widget.attrs.update({'class': 'form-control'})
         self.fields['warehouse2'].widget.attrs.update({'class': 'form-control'})
         self.fields['is_in_different_country'].widget = forms.CheckboxInput(
