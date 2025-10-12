@@ -34,7 +34,7 @@ def workschedule(request: HttpRequest) -> HttpResponse:
                 reader = csv.DictReader(decoded_file, delimiter=';')
                 for row in reader:
                     WorkSchedule_ST.objects.using('stage').create(
-                        user=request.user.username,
+                        user=request.user.id,
                         work_day=row['work_day'],
                         start_time=row['start_time'],
                         end_time=row['end_time']
@@ -49,7 +49,7 @@ def workschedule(request: HttpRequest) -> HttpResponse:
             form = WorkScheduleForm(request.POST)
             if form.is_valid():
                 instance = form.save(commit=False)
-                instance.user = request.user.username
+                instance.user = request.user.id
                 instance.save(using='stage')
                 messages.success(request, 'Work schedule added successfully!')
             else:
@@ -59,7 +59,7 @@ def workschedule(request: HttpRequest) -> HttpResponse:
     else:
         form = WorkScheduleForm()
         # Query all work schedules ordered by work_day descending
-        work_schedules = WorkSchedule_ST.objects.using('stage').filter(user=request.user.username).order_by('-work_day')
+        work_schedules = WorkSchedule_ST.objects.using('stage').filter(user=request.user.id).order_by('-work_day')
         return render(request, 'internal/workschedule.html', {'form': form, 'work_schedules': work_schedules})
     
 @login_required
@@ -194,7 +194,7 @@ def shipments(request: HttpRequest) -> HttpResponse:
 
 @login_required
 def workschedule_update(request: HttpRequest, pk: int) -> HttpResponse:
-    schedule = get_object_or_404(WorkSchedule_ST, pk=pk, user=request.user.username)
+    schedule = get_object_or_404(WorkSchedule_ST, pk=pk, user=request.user.id)
     if request.method == 'POST':
         form = WorkScheduleForm(request.POST, instance=schedule)
         if form.is_valid():
@@ -210,7 +210,7 @@ def workschedule_update(request: HttpRequest, pk: int) -> HttpResponse:
 
 @login_required
 def workschedule_delete(request: HttpRequest, pk: int) -> HttpResponse:
-    schedule = get_object_or_404(WorkSchedule_ST, pk=pk, user=request.user.username)
+    schedule = get_object_or_404(WorkSchedule_ST, pk=pk, user=request.user.id)
     if request.method == 'POST':
         schedule.delete(using='stage')
         messages.success(request, 'Work schedule deleted successfully!')

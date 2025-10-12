@@ -1,8 +1,12 @@
 from leafroute.apps.internal_stage.models import (
-    City_ST, Address_ST, UserProfile_ST, Warehouse_ST, WarehouseConnection_ST
+    City_ST, Address_ST, UserProfile_ST, Warehouse_ST, WarehouseConnection_ST,
+    Route_ST, RoutePart_ST, WorkSchedule_ST, Vehicle_ST, Product_ST,
+    WarehouseProduct_ST, Order_ST, Shipment_ST, UserShipments_ST
 )
 from leafroute.apps.internal.models import (
-    City, Address, UserProfile, Warehouse, WarehouseConnection
+    City, Address, UserProfile, Warehouse, WarehouseConnection,
+    Route, RoutePart, WorkSchedule, Vehicle, Product,
+    WarehouseProduct, Order, Shipment, UserShipment
 )
 from django.db import transaction
 
@@ -78,6 +82,147 @@ def etl_job():
                         'is_in_different_country': warehouse_connection_st.is_in_different_country == 'True',
                         'is_in_different_continent': warehouse_connection_st.is_in_different_continent == 'True',
                     }
+                )
+
+            # Extract and Transform: Route
+            for route_st in Route_ST.objects.using('stage').all():
+                route, created = Route.objects.using('default').update_or_create(
+                    route_id=route_st.route_id,
+                    defaults={
+                        'warehouse_connection': WarehouseConnection.objects.using('default').get(
+                            warehouse_connection_id=route_st.warehouse_connection.warehouse_connection_id
+                        ),
+                    }
+                )
+
+            # Extract and Transform: RoutePart
+            for route_part_st in RoutePart_ST.objects.using('stage').all():
+                route_part, created = RoutePart.objects.using('default').update_or_create(
+                    route_part_id=route_part_st.route_part_id,
+                    defaults={
+                        'route': Route.objects.using('default').get(route_id=route_part_st.route.route_id),
+                        'distance': float(route_part_st.distance) if route_part_st.distance else None,
+                        'transport_mode': route_part_st.transport_mode,
+                        'start_address': Address.objects.using('default').get(
+                            address_id=route_part_st.start_address.address_id
+                        ),
+                        'end_address': Address.objects.using('default').get(
+                            address_id=route_part_st.end_address.address_id
+                        ),
+                        'route_cost': float(route_part_st.route_cost) if route_part_st.route_cost else None,
+                    }
+                )
+
+            # Extract and Transform: WorkSchedule
+            for work_schedule_st in WorkSchedule_ST.objects.using('stage').all():
+                work_schedule, created = WorkSchedule.objects.using('default').update_or_create(
+                    schedule_id=work_schedule_st.schedule_id,
+                    defaults={
+                        'user': UserProfile.objects.using('default').get(
+                            user_id=work_schedule_st.user
+                        ),
+                        'work_day': work_schedule_st.work_day,
+                        'start_time': work_schedule_st.start_time,
+                        'end_time': work_schedule_st.end_time,
+                    }
+                )
+
+            # Extract and Transform: Vehicle
+            for vehicle_st in Vehicle_ST.objects.using('stage').all():
+                vehicle, created = Vehicle.objects.using('default').update_or_create(
+                    vehicle_id=vehicle_st.vehicle_id,
+                    defaults={
+                        'brand': vehicle_st.brand,
+                        'model': vehicle_st.model,
+                        'production_year': int(vehicle_st.production_year) if vehicle_st.production_year else None,
+                        'type': vehicle_st.type,
+                        'fuel_type': vehicle_st.fuel_type,
+                        'consumption': float(vehicle_st.consumption) if vehicle_st.consumption else None,
+                        'full_capacity': float(vehicle_st.full_capacity) if vehicle_st.full_capacity else None,
+                        'free_capacity': float(vehicle_st.free_capacity) if vehicle_st.free_capacity else None,
+                        'status': vehicle_st.status,
+                        'address': Address.objects.using('default').get(
+                            address_id=vehicle_st.address.address_id
+                        ) if vehicle_st.address else None,
+                        'avg_distance_per_hour': float(vehicle_st.avg_distance_per_hour) if vehicle_st.avg_distance_per_hour else None,
+                        'fuel_cost': float(vehicle_st.fuel_cost) if vehicle_st.fuel_cost else None,
+                    }
+                )
+
+            # Extract and Transform: Product
+            for product_st in Product_ST.objects.using('stage').all():
+                product, created = Product.objects.using('default').update_or_create(
+                    product_id=product_st.product_id,
+                    defaults={
+                        'name': product_st.name,
+                        'category': product_st.category,
+                        'unit_price': float(product_st.unit_price) if product_st.unit_price else None,
+                        'size': float(product_st.size) if product_st.size else None,
+                        'is_alive': product_st.is_alive == 'True',
+                        'is_liquid': product_st.is_liquid == 'True',
+                        'is_hazardous': product_st.is_hazardous == 'True',
+                        'is_time_sensitive': product_st.is_time_sensitive == 'True',
+                    }
+                )
+
+            # Extract and Transform: WarehouseProduct
+            for warehouse_product_st in WarehouseProduct_ST.objects.using('stage').all():
+                warehouse_product, created = WarehouseProduct.objects.using('default').update_or_create(
+                    product=Product.objects.using('default').get(product_id=warehouse_product_st.product.product_id),
+                    warehouse=Warehouse.objects.using('default').get(warehouse_id=warehouse_product_st.warehouse.warehouse_id),
+                    defaults={
+                        'free_stock': int(warehouse_product_st.free_stock) if warehouse_product_st.free_stock else None,
+                        'reserved_stock': int(warehouse_product_st.reserved_stock) if warehouse_product_st.reserved_stock else None,
+                    }
+                )
+
+            # Extract and Transform: Order
+            for order_st in Order_ST.objects.using('stage').all():
+                order, created = Order.objects.using('default').update_or_create(
+                    order_id=order_st.order_id,
+                    defaults={
+                        'user': UserProfile.objects.using('default').get(user_id=order_st.user.user_id),
+                        'product': Product.objects.using('default').get(product_id=order_st.product.product_id),
+                        'warehouse_connection': WarehouseConnection.objects.using('default').get(
+                            warehouse_connection_id=order_st.warehouse_connection.warehouse_connection_id
+                        ),
+                        'route': Route.objects.using('default').get(route_id=order_st.route.route_id),
+                        'quantity': int(order_st.quantity) if order_st.quantity else None,
+                        'order_date': order_st.order_date,
+                        'expected_fullfillment_date': order_st.expected_fullfillment_date,
+                        'fulfillment_date': order_st.fulfillment_date,
+                        'order_status': order_st.order_status,
+                        'expected_co2_emission': float(order_st.expected_co2_emission) if order_st.expected_co2_emission else None,
+                        'co2_emmission': float(order_st.co2_emmission) if order_st.co2_emmission else None,
+                        'cost': float(order_st.cost) if order_st.cost else None,
+                    }
+                )
+
+            # Extract and Transform: Shipment
+            for shipment_st in Shipment_ST.objects.using('stage').all():
+                shipment, created = Shipment.objects.using('default').update_or_create(
+                    shipment_id=shipment_st.shipment_id,
+                    defaults={
+                        'order': Order.objects.using('default').get(order_id=shipment_st.order.order_id),
+                        'vehicle': Vehicle.objects.using('default').get(vehicle_id=shipment_st.vehicle.vehicle_id),
+                        'product': Product.objects.using('default').get(product_id=shipment_st.product.product_id),
+                        'route_part': RoutePart.objects.using('default').get(route_part_id=shipment_st.route_part.route_part_id),
+                        'shipment_start_date': shipment_st.shipment_start_date,
+                        'shipment_end_date': shipment_st.shipment_end_date,
+                        'duration': int(shipment_st.duration) if shipment_st.duration else None,
+                        'quantity_transported': int(shipment_st.quantity_transported) if shipment_st.quantity_transported else None,
+                        'fuel_consumed': float(shipment_st.fuel_consumed) if shipment_st.fuel_consumed else None,
+                        'status': shipment_st.status,
+                        'co2_emission': float(shipment_st.co2_emission) if shipment_st.co2_emission else None,
+                        'transport_cost': float(shipment_st.transport_cost) if shipment_st.transport_cost else None,
+                    }
+                )
+
+            # Extract and Transform: UserShipment
+            for user_shipment_st in UserShipments_ST.objects.using('stage').all():
+                user_shipment, created = UserShipment.objects.using('default').update_or_create(
+                    user=UserProfile.objects.using('default').get(user_id=user_shipment_st.user.user_id),
+                    shipment=Shipment.objects.using('default').get(shipment_id=user_shipment_st.shipment.shipment_id),
                 )
 
             print("ETL job completed successfully!")

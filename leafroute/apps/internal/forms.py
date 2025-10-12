@@ -60,23 +60,23 @@ class VehicleForm(forms.ModelForm):
         if 'model' in self.fields:
             self.fields['model'].widget = forms.TextInput(attrs={'class': 'form-control'})
         if 'production_year' in self.fields:
-            self.fields['production_year'].widget = forms.TextInput(attrs={'class': 'form-control'})
+            self.fields['production_year'].widget = forms.NumberInput(attrs={'class': 'form-control'})
         if 'type' in self.fields:
             self.fields['type'].widget = forms.TextInput(attrs={'class': 'form-control'})
         if 'fuel_type' in self.fields:
             self.fields['fuel_type'].widget = forms.TextInput(attrs={'class': 'form-control'})
         if 'consumption' in self.fields:
-            self.fields['consumption'].widget = forms.TextInput(attrs={'class': 'form-control'})
+            self.fields['consumption'].widget = forms.NumberInput(attrs={'class': 'form-control','step':'0.01'})
         if 'full_capacity' in self.fields:
-            self.fields['full_capacity'].widget = forms.TextInput(attrs={'class': 'form-control'})
+            self.fields['full_capacity'].widget = forms.NumberInput(attrs={'class': 'form-control','step':'0.01'})
         if 'free_capacity' in self.fields:
-            self.fields['free_capacity'].widget = forms.TextInput(attrs={'class': 'form-control'})
+            self.fields['free_capacity'].widget = forms.NumberInput(attrs={'class': 'form-control','step':'0.01'})
         if 'status' in self.fields:
             self.fields['status'].widget = forms.TextInput(attrs={'class': 'form-control'})
         if 'avg_distance_per_hour' in self.fields:
-            self.fields['avg_distance_per_hour'].widget = forms.TextInput(attrs={'class': 'form-control'})
+            self.fields['avg_distance_per_hour'].widget = forms.NumberInput(attrs={'class': 'form-control','step':'0.01'})
         if 'fuel_cost' in self.fields:
-            self.fields['fuel_cost'].widget = forms.TextInput(attrs={'class': 'form-control'})
+            self.fields['fuel_cost'].widget = forms.NumberInput(attrs={'class': 'form-control'})
 
 class WarehouseForm(forms.ModelForm):
     class Meta:
