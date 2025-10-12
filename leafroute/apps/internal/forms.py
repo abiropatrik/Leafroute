@@ -1,3 +1,4 @@
+from dataclasses import fields
 from django import forms
 from leafroute.apps.internal_stage.models import Address_ST, City_ST, Route_ST, Warehouse_ST, WarehouseConnection_ST, WorkSchedule_ST,Vehicle_ST
 
@@ -46,43 +47,36 @@ class VehicleForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        fields = kwargs.pop('fields', None)
         super().__init__(*args, **kwargs)
+        if fields:
+            allowed = set(fields)
+            for field_name in list(self.fields):
+                if field_name not in allowed:
+                    self.fields.pop(field_name)
 
-        # Calendar for brand
-        self.fields['brand'].widget = forms.TextInput(
-            attrs={'class': 'form-control'}
-        )
-        # Time pickers
-        self.fields['model'].widget = forms.TextInput(
-            attrs={'class': 'form-control'}
-        )
-        self.fields['production_year'].widget = forms.TextInput(
-            attrs={'class': 'form-control'}
-        )
-        self.fields['type'].widget = forms.TextInput(
-            attrs={'class': 'form-control'}
-        )
-        self.fields['fuel_type'].widget = forms.TextInput(
-            attrs={'class': 'form-control'}
-        )
-        self.fields['consumption'].widget = forms.TextInput(
-            attrs={'class': 'form-control'}
-        )
-        self.fields['full_capacity'].widget = forms.TextInput(
-            attrs={'class': 'form-control'}
-        )
-        self.fields['free_capacity'].widget = forms.TextInput(
-            attrs={'class': 'form-control'}
-        )
-        self.fields['status'].widget = forms.TextInput(
-            attrs={'class': 'form-control'}
-        )
-        self.fields['avg_distance_per_hour'].widget = forms.TextInput(
-            attrs={'class': 'form-control'}
-        )
-        self.fields['fuel_cost'].widget = forms.TextInput(
-            attrs={'class': 'form-control'}
-        )
+        if 'brand' in self.fields:
+            self.fields['brand'].widget = forms.TextInput(attrs={'class': 'form-control'})
+        if 'model' in self.fields:
+            self.fields['model'].widget = forms.TextInput(attrs={'class': 'form-control'})
+        if 'production_year' in self.fields:
+            self.fields['production_year'].widget = forms.TextInput(attrs={'class': 'form-control'})
+        if 'type' in self.fields:
+            self.fields['type'].widget = forms.TextInput(attrs={'class': 'form-control'})
+        if 'fuel_type' in self.fields:
+            self.fields['fuel_type'].widget = forms.TextInput(attrs={'class': 'form-control'})
+        if 'consumption' in self.fields:
+            self.fields['consumption'].widget = forms.TextInput(attrs={'class': 'form-control'})
+        if 'full_capacity' in self.fields:
+            self.fields['full_capacity'].widget = forms.TextInput(attrs={'class': 'form-control'})
+        if 'free_capacity' in self.fields:
+            self.fields['free_capacity'].widget = forms.TextInput(attrs={'class': 'form-control'})
+        if 'status' in self.fields:
+            self.fields['status'].widget = forms.TextInput(attrs={'class': 'form-control'})
+        if 'avg_distance_per_hour' in self.fields:
+            self.fields['avg_distance_per_hour'].widget = forms.TextInput(attrs={'class': 'form-control'})
+        if 'fuel_cost' in self.fields:
+            self.fields['fuel_cost'].widget = forms.TextInput(attrs={'class': 'form-control'})
 
 class WarehouseForm(forms.ModelForm):
     class Meta:
@@ -95,18 +89,21 @@ class WarehouseForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        fields = kwargs.pop('fields', None)
         super().__init__(*args, **kwargs)
+        if fields:
+            allowed = set(fields)
+            for field_name in list(self.fields):
+                if field_name not in allowed:
+                    self.fields.pop(field_name)
 
         # Time pickers
-        self.fields['capacity'].widget = forms.NumberInput(
-            attrs={'class': 'form-control'}
-        )
-        self.fields['fullness'].widget = forms.NumberInput(
-            attrs={'class': 'form-control'}
-        )
-        self.fields['contact_email'].widget = forms.TextInput(
-            attrs={'class': 'form-control'}
-        )
+        if 'capacity' in self.fields:
+            self.fields['capacity'].widget = forms.NumberInput(attrs={'class': 'form-control'})
+        if 'fullness' in self.fields:
+            self.fields['fullness'].widget = forms.NumberInput(attrs={'class': 'form-control'})
+        if 'contact_email' in self.fields:
+            self.fields['contact_email'].widget = forms.TextInput(attrs={'class': 'form-control'})
 
 class RouteForm(forms.ModelForm):
     class Meta:

@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse,HttpRequest
+from django.http import HttpResponse,HttpRequest,HttpResponseForbidden
 from django.contrib.auth.decorators import login_required, permission_required
 from functools import wraps
 from django.core.exceptions import PermissionDenied
@@ -221,7 +221,14 @@ def workschedule_delete(request: HttpRequest, pk: int) -> HttpResponse:
 def vehicle_update(request: HttpRequest, pk: int) -> HttpResponse:
     vehicle = get_object_or_404(Vehicle_ST, pk=pk)
     if request.method == 'POST':
-        form = VehicleForm(request.POST, instance=vehicle)
+        if request.user.has_perm('internal.organiser_tasks'):
+            form = VehicleForm(request.POST, instance=vehicle)
+        elif request.user.has_perm('internal.warehouseman_tasks'):
+            form = VehicleForm(request.POST, instance=vehicle, fields=['free_capacity','status'])
+        elif request.user.has_perm('internal.driver_tasks'):
+            form = VehicleForm(request.POST, instance=vehicle, fields=['consumption', 'free_capacity','status','avg_distance_per_hour','fuel_cost'])
+        else:
+            return HttpResponseForbidden()
         if form.is_valid():
             instance = form.save(commit=False)
             instance.save(using='stage')
@@ -230,7 +237,14 @@ def vehicle_update(request: HttpRequest, pk: int) -> HttpResponse:
         else:
             messages.error(request, 'Error updating vehicle.')
     else:
-        form = VehicleForm(instance=vehicle)
+        if request.user.has_perm('internal.organiser_tasks'):
+            form = VehicleForm(instance=vehicle)
+        elif request.user.has_perm('internal.warehouseman_tasks'):
+            form = VehicleForm(instance=vehicle, fields=['free_capacity','status'])
+        elif request.user.has_perm('internal.driver_tasks'):
+            form = VehicleForm(instance=vehicle, fields=['consumption', 'free_capacity','status','avg_distance_per_hour','fuel_cost'])
+        else:
+            return HttpResponseForbidden()
     return render(request, 'internal/vehicle_update.html', {'form': form})
 
 @login_required
@@ -248,7 +262,13 @@ def vehicle_delete(request: HttpRequest, pk: int) -> HttpResponse:
 def warehouse_update(request: HttpRequest, pk: int) -> HttpResponse:
     warehouse = get_object_or_404(Warehouse_ST, pk=pk)
     if request.method == 'POST':
-        form = WarehouseForm(request.POST, instance=warehouse)
+        if request.user.has_perm('internal.organiser_tasks'):
+            form = WarehouseForm(request.POST, instance=warehouse)
+        elif request.user.has_perm('internal.warehouseman_tasks'):
+            form = WarehouseForm(request.POST, instance=warehouse, fields=['fullness'])
+        else:
+            return HttpResponseForbidden()
+        
         if form.is_valid():
             instance = form.save(commit=False)
             instance.save(using='stage')
@@ -257,7 +277,12 @@ def warehouse_update(request: HttpRequest, pk: int) -> HttpResponse:
         else:
             messages.error(request, 'Error updating warehouse.')
     else:
-        form = WarehouseForm(instance=warehouse)
+        if request.user.has_perm('internal.organiser_tasks'):
+            form = WarehouseForm(instance=warehouse)
+        elif request.user.has_perm('internal.warehouseman_tasks'):
+            form = WarehouseForm(instance=warehouse, fields=['fullness'])
+        else:
+            return HttpResponseForbidden()
     return render(request, 'internal/warehouse_update.html', {'form': form})
 
 @login_required
