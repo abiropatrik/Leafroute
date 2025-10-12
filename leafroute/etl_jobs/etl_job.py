@@ -8,7 +8,11 @@ from leafroute.apps.internal.models import (
     Route, RoutePart, WorkSchedule, Vehicle, Product,
     WarehouseProduct, Order, Shipment, UserShipment
 )
+from leafroute.apps.internal_dm.models import (
+    DimOrder, DimVehicle, DimProduct, DimRoute, DimDate, FactShipment
+)
 from django.db import transaction
+from datetime import datetime
 
 def etl_job():
     """
@@ -229,3 +233,104 @@ def etl_job():
 
     except Exception as e:
         print(f"ETL job failed: {e}")
+
+
+def dm_etl_job():
+    """
+    ETL job to transfer data from default models to dm models.
+    """
+    try:
+        with transaction.atomic():
+            # DimOrder
+            for order in Order.objects.using('default').all():
+                DimOrder.objects.using('dm').update_or_create(
+                    orderid=order.order_id,
+                    defaults={
+                        'orderstatus': order.order_status,
+                        'userfirstname': order.user.first_name if order.user else None,
+                        'userlastname': order.user.last_name if order.user else None,
+                        'useremail': order.user.email if order.user else None,
+                    }
+                )
+
+            # DimVehicle
+            for vehicle in Vehicle.objects.using('default').all():
+                DimVehicle.objects.using('dm').update_or_create(
+                    vehicleid=vehicle.vehicle_id,
+                    defaults={
+                        'brand': vehicle.brand,
+                        'model': vehicle.model,
+                        'type': vehicle.type,
+                        'fueltype': vehicle.fuel_type,
+                    }
+                )
+
+            # DimProduct
+            for product in Product.objects.using('default').all():
+                DimProduct.objects.using('dm').update_or_create(
+                    productid=product.product_id,
+                    defaults={
+                        'name': product.name,
+                        'category': product.category,
+                        'size': int(product.size) if product.size else None,
+                    }
+                )
+
+            # DimRoute
+            for route in Route.objects.using('default').all():
+                start_city = route.warehouse_connection.warehouse1.address.city.name if route.warehouse_connection.warehouse1.address.city else None
+                end_city = route.warehouse_connection.warehouse2.address.city.name if route.warehouse_connection.warehouse2.address.city else None
+                DimRoute.objects.using('dm').update_or_create(
+                    routeid=route.route_id,
+                    defaults={
+                        'startcity': start_city,
+                        'endcity': end_city,
+                    }
+                )
+
+            # DimDate
+            for shipment in Shipment.objects.using('default').all():
+                if shipment.shipment_start_date:
+                    start_date = shipment.shipment_start_date
+                    DimDate.objects.using('dm').update_or_create(
+                        dateid=shipment.shipment_id,  # Using shipment_id as a unique identifier for dates
+                        defaults={
+                            'year': start_date.year,
+                            'month': start_date.month,
+                            'monthname': start_date.strftime('%B'),
+                            'day': start_date.day,
+                            'dayname': start_date.strftime('%A'),
+                            'hour': start_date.hour,
+                        }
+                    )
+
+            # FactShipment
+            for shipment in Shipment.objects.using('default').all():
+                FactShipment.objects.using('dm').update_or_create(
+                    shipmentid=shipment.shipment_id,
+                    defaults={
+                        'shipmentstartdate': shipment.shipment_start_date,
+                        'shipmentenddate': shipment.shipment_end_date,
+                        'duration': shipment.duration,
+                        'quantitytransported': shipment.quantity_transported,
+                        'fuelconsumed': shipment.fuel_consumed,
+                        'co2emission': shipment.co2_emission,
+                        'transportcost': shipment.transport_cost,
+                        'distance': shipment.route_part.distance if shipment.route_part else None,
+                        'routecost': shipment.route_part.route_cost if shipment.route_part else None,
+                        'unitprice': shipment.product.unit_price if shipment.product else None,
+                        'consumption': shipment.vehicle.consumption if shipment.vehicle else None,
+                        'fuelcost': shipment.vehicle.fuel_cost if shipment.vehicle else None,
+                        'productionyear': shipment.vehicle.production_year if shipment.vehicle else None,
+                        'orderid': DimOrder.objects.using('dm').get(orderid=shipment.order.order_id) if shipment.order else None,
+                        'productid': DimProduct.objects.using('dm').get(productid=shipment.product.product_id) if shipment.product else None,
+                        'routeid': DimRoute.objects.using('dm').get(routeid=shipment.route_part.route.route_id) if shipment.route_part and shipment.route_part.route else None,
+                        'vehicleid': DimVehicle.objects.using('dm').get(vehicleid=shipment.vehicle.vehicle_id) if shipment.vehicle else None,
+                        'dateid': DimDate.objects.using('dm').get(dateid=shipment.shipment_id) if shipment.shipment_start_date else None,
+                    }
+                )
+
+            print("DM ETL job completed successfully!")
+
+    except Exception as e:
+        print(f"DM ETL job failed: {e}")
