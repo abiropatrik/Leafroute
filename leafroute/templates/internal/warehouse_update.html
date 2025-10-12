@@ -14,18 +14,25 @@
     <form method="post" class="form">
         {% csrf_token %}
         <h4>Raktár adatai</h4>
-        <div class="form-group">
-            {{ form.capacity.label_tag }}
-            {{ form.capacity }}
-        </div>
-        <div class="form-group">
-            {{ form.fullness.label_tag }}
-            {{ form.fullness }}
-        </div>
-        <div class="form-group">
-            {{ form.contact_email.label_tag }}
-            {{ form.contact_email }}
-        </div>
+        {% if perms.internal.organiser_tasks %}
+            <div class="form-group">
+                {{ form.capacity.label_tag }}
+                {{ form.capacity }}
+            </div>
+            <div class="form-group">
+                {{ form.fullness.label_tag }}
+                {{ form.fullness }}
+            </div>
+            <div class="form-group">
+                {{ form.contact_email.label_tag }}
+                {{ form.contact_email }}
+            </div>
+        {% elif perms.internal.warehouseman_tasks %}
+            <div class="form-group">
+                {{ form.fullness.label_tag }}
+                {{ form.fullness }}
+            </div>
+        {% endif %}
         <button type="submit" class="btn btn-primary">Update</button>
         <a href="{% url 'internal:warehouse_settings' %}" class="btn btn-secondary">Cancel</a>
     </form>

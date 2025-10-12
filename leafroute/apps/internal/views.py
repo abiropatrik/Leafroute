@@ -63,7 +63,7 @@ def workschedule(request: HttpRequest) -> HttpResponse:
         return render(request, 'internal/workschedule.html', {'form': form, 'work_schedules': work_schedules})
     
 @login_required
-@permission_required('internal.organiser_tasks', raise_exception=True)
+@permission_or_required('internal.organiser_tasks','internal.driver_tasks','internal.warehouseman_tasks')
 def vehicle_settings(request: HttpRequest) -> HttpResponse:
     if request.method == 'POST':
         # Handle CSV Upload
@@ -153,7 +153,7 @@ def new_route(request: HttpRequest) -> HttpResponse:
         })
 
 @login_required
-@permission_required('internal.organiser_tasks', raise_exception=True)
+@permission_or_required('internal.organiser_tasks', 'internal.warehouseman_tasks')
 def warehouse_settings(request: HttpRequest) -> HttpResponse:
     if request.method == 'POST':
         warehouse_form = WarehouseForm(request.POST)
@@ -217,7 +217,7 @@ def workschedule_delete(request: HttpRequest, pk: int) -> HttpResponse:
         return redirect('internal:workschedule')
     
 @login_required
-@permission_required('internal.organiser_tasks', raise_exception=True)
+@permission_or_required('internal.organiser_tasks','internal.driver_tasks','internal.warehouseman_tasks')
 def vehicle_update(request: HttpRequest, pk: int) -> HttpResponse:
     vehicle = get_object_or_404(Vehicle_ST, pk=pk)
     if request.method == 'POST':
@@ -244,7 +244,7 @@ def vehicle_delete(request: HttpRequest, pk: int) -> HttpResponse:
     return render(request, 'internal/vehicle_delete.html', {'vehicle': vehicle})
 
 @login_required
-@permission_required('internal.organiser_tasks', raise_exception=True)
+@permission_or_required('internal.organiser_tasks', 'internal.warehouseman_tasks')
 def warehouse_update(request: HttpRequest, pk: int) -> HttpResponse:
     warehouse = get_object_or_404(Warehouse_ST, pk=pk)
     if request.method == 'POST':
