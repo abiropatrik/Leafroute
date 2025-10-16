@@ -1,6 +1,6 @@
 from dataclasses import fields
 from django import forms
-from leafroute.apps.internal_stage.models import Address_ST, City_ST, Route_ST, Warehouse_ST, WarehouseConnection_ST, WorkSchedule_ST,Vehicle_ST
+from leafroute.apps.internal_stage.models import Address_ST, City_ST, Order_ST, Product_ST, Route_ST, Warehouse_ST, WarehouseConnection_ST, WorkSchedule_ST,Vehicle_ST
 
 class WorkScheduleForm(forms.ModelForm):
     class Meta:
@@ -208,3 +208,58 @@ class CityForm(forms.ModelForm):
         self.fields['latitude_coordinate'].widget = forms.TextInput(
             attrs={'class': 'form-control'}
         )
+
+class OrderForm(forms.ModelForm):
+    class Meta:
+        model = Order_ST
+        fields = ['product','warehouse_connection','quantity', 'order_date', 'expected_fullfillment_date', 'fulfillment_date', 'order_status', 'expected_co2_emission', 'co2_emmission', 'cost']
+        labels = {
+            'product': 'Termék',
+            'warehouse_connection': 'Raktár kapcsolat',
+            'quantity': 'Mennyiség',
+            'order_date': 'Megrendelés dátuma',
+            'expected_fullfillment_date': 'Várt teljesítési dátum',
+            'fulfillment_date': 'Teljesítési dátum',
+            'order_status': 'Megrendelés állapota',
+            'expected_co2_emission': 'Várt CO2 kibocsátás',
+            'co2_emmission': 'CO2 kibocsátás',
+            'cost': 'Költség',
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields['product'].queryset = Product_ST.objects.none()
+        self.fields['warehouse_connection'].queryset = WarehouseConnection_ST.objects.using('stage').all()
+
+
+        if 'warehouse_connection' in self.data:
+            try:
+                connection_id = int(self.data.get('warehouse_connection'))
+                connection = WarehouseConnection_ST.objects.using('stage').get(pk=connection_id)
+
+                warehouse_id = connection.warehouse1_id
+
+                products = Product_ST.objects.using('stage').filter(
+                    warehouseproduct_st__warehouse_id=warehouse_id
+                ).distinct()
+                self.fields['product'].queryset = products
+            except (ValueError, WarehouseConnection_ST.DoesNotExist):
+                pass
+        elif self.instance.pk:
+            connection = self.instance.warehouse_connection
+            warehouse_id = connection.warehouse1_id
+            self.fields['product'].queryset = Product_ST.objects.using('stage').filter(
+                warehouseproduct_st__warehouse_id=warehouse_id
+            ).distinct()
+
+
+
+        self.fields['quantity'].widget = forms.NumberInput(attrs={'class': 'form-control'})
+        self.fields['order_date'].widget = forms.DateInput(attrs={'type': 'date', 'class': 'form-control'})
+        self.fields['expected_fullfillment_date'].widget = forms.DateInput(attrs={'type': 'date', 'class': 'form-control'})
+        self.fields['fulfillment_date'].widget = forms.DateInput(attrs={'type': 'date', 'class': 'form-control'})
+        self.fields['order_status'].widget = forms.TextInput(attrs={'class': 'form-control'})
+        self.fields['expected_co2_emission'].widget = forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'})
+        self.fields['co2_emmission'].widget = forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'})
+        self.fields['cost'].widget = forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'})

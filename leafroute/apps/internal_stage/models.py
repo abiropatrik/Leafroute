@@ -14,6 +14,9 @@ class City_ST(models.Model):
 
     class Meta:
         db_table = "Cities_ST"
+
+    def __str__(self):
+        return f"{self.name}, {self.country}"
     
 
 
@@ -112,6 +115,9 @@ class RoutePart_ST(models.Model):
     class Meta:
         db_table = "RouteParts_ST"
 
+    def __str__(self):
+        return f"RoutePart {self.route_part_id} of Route {self.route.route_id}"
+
 
 class WorkSchedule_ST(models.Model):
     schedule_id = models.AutoField(primary_key=True, db_column="Schedule_id")
@@ -144,6 +150,9 @@ class Vehicle_ST(models.Model):
     class Meta:
         db_table = "Vehicles_ST"
 
+    def __str__(self):
+        return f"{self.brand} {self.model} ({self.type})"
+
 
 
 
@@ -161,6 +170,10 @@ class Product_ST(models.Model):
     class Meta:
         db_table = "Products_ST"
 
+    def __str__(self):
+        return f"{self.name} ({self.category})"
+
+
 
 
 
@@ -174,6 +187,8 @@ class WarehouseProduct_ST(models.Model):
         db_table = "WarehouseProducts_ST"
         unique_together = ("product", "warehouse")
 
+    def __str__(self):
+        return f"{self.product.name} ({self.warehouse.address.institution_name})"
 
 
 class Order_ST(models.Model):
@@ -194,6 +209,8 @@ class Order_ST(models.Model):
     class Meta:
         db_table = "Orders_ST"
 
+    def __str__(self):
+        return f"Order {self.order_id} by {self.user.user.username}"
 
 
 class Shipment_ST(models.Model):
@@ -213,6 +230,9 @@ class Shipment_ST(models.Model):
 
     class Meta:
         db_table = "Shipments_ST"
+
+    def __str__(self):
+        return f"Shipment {self.shipment_id} for Order {self.order.order_id}"
 
 
 

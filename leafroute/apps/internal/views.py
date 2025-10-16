@@ -1,12 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse,HttpRequest,HttpResponseForbidden
+from django.http import HttpResponse,HttpRequest,HttpResponseForbidden,JsonResponse
 from django.contrib.auth.decorators import login_required, permission_required
 from functools import wraps
 from django.core.exceptions import PermissionDenied
 import csv
 from django.contrib import messages
-from leafroute.apps.internal_stage.models import Route_ST, WarehouseConnection_ST, WorkSchedule_ST,Vehicle_ST,Warehouse_ST,Address_ST,City_ST
-from leafroute.apps.internal.forms import RouteForm, WarehouseConnectionForm, WorkScheduleForm,VehicleForm,WarehouseForm,AddressForm,CityForm
+from leafroute.apps.internal_stage.models import Product_ST,Route_ST, WarehouseConnection_ST, WorkSchedule_ST,Vehicle_ST,Warehouse_ST,Address_ST,City_ST
+from leafroute.apps.internal.forms import OrderForm,RouteForm, WarehouseConnectionForm, WorkScheduleForm,VehicleForm,WarehouseForm,AddressForm,CityForm
 
 
 def permission_or_required(*perms):
@@ -115,7 +115,29 @@ def vehicle_settings(request: HttpRequest) -> HttpResponse:
 @login_required
 @permission_or_required('internal.organiser_tasks')
 def new_transport(request: HttpRequest) -> HttpResponse:
-    return render(request,'internal/new_transport.html')
+    if request.method == 'POST':
+        order_form = OrderForm(request.POST)
+
+        if order_form.is_valid():
+            order_instance = order_form.save(commit=False)
+            order_instance.save(using='stage')
+
+            messages.success(request, 'New transport added successfully!')
+        else:
+            errors = {
+                'order_form': order_form.errors,
+            }
+            for form_name, form_errors in errors.items():
+                if form_errors:
+                    print(f"{form_name} errors: {form_errors}")
+            messages.error(request, 'Error transport route. Please check the form inputs.')
+        return redirect('internal:new_transport')
+
+    else:
+        order_form = OrderForm()
+        return render(request, 'internal/new_transport.html', {
+            'order_form': order_form,
+        })
 
 @login_required
 @permission_required('internal.organiser_tasks', raise_exception=True)
@@ -294,3 +316,25 @@ def warehouse_delete(request: HttpRequest, pk: int) -> HttpResponse:
         messages.success(request, 'Warehouse deleted successfully!')
         return redirect('internal:warehouse_settings')
     return render(request, 'internal/warehouse_delete.html', {'warehouse': warehouse})
+
+@login_required
+def load_products(request):
+    """Return products for the given warehouse connection as JSON."""
+    connection_id = request.GET.get('warehouse_connection')
+    products = Product_ST.objects.none()
+
+    if connection_id:
+        try:
+            connection = WarehouseConnection_ST.objects.using('stage').get(pk=connection_id)
+            warehouse_id = connection.warehouse1_id
+            products = Product_ST.objects.using('stage').filter(
+                warehouseproduct_st__warehouse_id=warehouse_id
+            ).distinct()
+        except WarehouseConnection_ST.DoesNotExist:
+            pass
+
+    data = [
+        {'id': p.pk, 'name': str(p)}
+        for p in products
+    ]
+    return JsonResponse({'products': data})
