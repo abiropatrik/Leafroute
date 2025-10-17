@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'theme/css/editdata.css' %}?v=3">
+{% endblock %}
+
+{% block title %}Új szállítás felvétele{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Messages -->
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="alert {{ message.tags }}">{{ message }}</div>
+        <div class="alert {{ message.tags }}">{{ order_form.quantity.errors }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <h1 class="page-title">Új szállítás felvétele</h1>
+
+    <div class="card">
+        <h2 class="card-title">Felvett munkaidők</h2>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Route ID</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for route in routes %}
+                    <tr>
+                        <td>{{ route }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center">No options found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="upload-container">
+   
+        <!-- Manual Entry Section -->
+        <div class="create-card">
+            <form method="post" class="form">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary">Útvonal kiválasztása</button>
+            </form>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

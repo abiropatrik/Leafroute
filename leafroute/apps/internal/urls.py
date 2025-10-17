@@ -18,4 +18,5 @@ urlpatterns = [
     path('internal/warehouse/delete/<int:pk>/', views.warehouse_delete, name="warehouse_delete"),
     path('internal/warehouse/update/<int:pk>/', views.warehouse_update, name="warehouse_update"),
     path('internal/ajax/load-products/', views.load_products, name='ajax_load_products'),
+    path('internal/new_transport_route', views.new_transport_route, name="new_transport_route"),
 ]

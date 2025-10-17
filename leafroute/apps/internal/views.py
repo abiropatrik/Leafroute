@@ -5,7 +5,7 @@ from functools import wraps
 from django.core.exceptions import PermissionDenied
 import csv
 from django.contrib import messages
-from leafroute.apps.internal_stage.models import Product_ST,Route_ST, WarehouseConnection_ST, WorkSchedule_ST,Vehicle_ST,Warehouse_ST,Address_ST,City_ST
+from leafroute.apps.internal_stage.models import Order_ST,Product_ST,Route_ST, WarehouseConnection_ST, WorkSchedule_ST,Vehicle_ST,Warehouse_ST,Address_ST,City_ST
 from leafroute.apps.internal.forms import OrderForm,RouteForm, WarehouseConnectionForm, WorkScheduleForm,VehicleForm,WarehouseForm,AddressForm,CityForm
 
 
@@ -119,28 +119,60 @@ def new_transport(request: HttpRequest) -> HttpResponse:
         order_form = OrderForm(request.POST)
 
         if order_form.is_valid():
-            order_instance = order_form.save(commit=False)
-            order_instance.user = request.user.id
-            order_instance.save(using='stage')
-            messages.success(request, 'New transport added successfully!')
-            return redirect('internal:new_transport')  # ✅ redirect only on success
+            request.session['new_transport_data'] = {
+                'warehouse_connection': order_form.cleaned_data['warehouse_connection'].warehouse_connection_id,
+                'product': order_form.cleaned_data['product'].product_id,
+                'quantity': order_form.cleaned_data['quantity'],
+            }
+            return redirect('internal:new_transport_route')
 
         else:
-            # You can still log form errors for debugging
-            print("Order form errors:", order_form.errors)
-            messages.error(request, 'Error adding transport. Please check the form inputs.')
 
-            # ✅ Don't redirect — re-render the page with the bound form containing errors
-            return render(request, 'internal/new_transport.html', {
-                'order_form': order_form,
-            })
+            messages.error(request, 'Error adding transport. Please check the form inputs.')
 
     else:
         order_form = OrderForm()
-        return render(request, 'internal/new_transport.html', {
-            'order_form': order_form,
-        })
 
+    return render(request, 'internal/new_transport.html', {
+        'order_form': order_form,
+    })
+
+
+@login_required
+@permission_or_required('internal.organiser_tasks')
+def new_transport_route(request: HttpRequest) -> HttpResponse:
+    transport_data = request.session.get('new_transport_data')
+    if not transport_data:
+        messages.error(request, 'No transport data found. Please start again.')
+        return redirect('internal:new_transport')
+
+    if request.method == 'POST':
+        order_form = OrderForm(request.POST)
+        if order_form.is_valid():
+            order_instance = order_form.save(commit=False)
+            order_instance.warehouse_connection_id = transport_data['warehouse_connection']
+            order_instance.product_id = transport_data['product']
+            order_instance.quantity = transport_data['quantity']
+            order_instance.save(using='stage')
+
+            messages.success(request, 'New transport added successfully')
+
+            del request.session['new_transport_data']
+            return redirect('internal:new_transport')
+
+    else:
+        order_form = OrderForm(initial={
+            'warehouse_connection': transport_data['warehouse_connection'],
+            'product': transport_data['product'],
+            'quantity': transport_data['quantity'],
+        })
+        routes = Route_ST.objects.using('stage').filter(warehouse_connection_id=transport_data['warehouse_connection'])
+
+
+    return render(request, 'internal/new_transport_route.html', {
+        'order_form': order_form,
+        'routes': routes,
+    })
 
 @login_required
 @permission_required('internal.organiser_tasks', raise_exception=True)

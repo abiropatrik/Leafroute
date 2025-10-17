@@ -212,10 +212,11 @@ class CityForm(forms.ModelForm):
 class OrderForm(forms.ModelForm):
     class Meta:
         model = Order_ST
-        fields = ['product', 'warehouse_connection', 'quantity', 'order_date', 'expected_fullfillment_date', 'fulfillment_date', 'order_status', 'expected_co2_emission', 'co2_emmission', 'cost']
+        fields = ['product', 'warehouse_connection', 'route', 'quantity', 'order_date', 'expected_fullfillment_date', 'fulfillment_date', 'order_status', 'expected_co2_emission', 'co2_emmission', 'cost']
         labels = {
             'product': 'Termék',
             'warehouse_connection': 'Raktár kapcsolat',
+            'route': 'Útvonal',
             'quantity': 'Mennyiség',
             'order_date': 'Megrendelés dátuma',
             'expected_fullfillment_date': 'Várt teljesítési dátum',
@@ -228,9 +229,10 @@ class OrderForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
+        self.fields['route'].required = False
         self.fields['product'].queryset = Product_ST.objects.none()
         self.fields['warehouse_connection'].queryset = WarehouseConnection_ST.objects.using('stage').all()
+        self.fields['route'].queryset = Route_ST.objects.none()
 
         if 'warehouse_connection' in self.data:
             try:
@@ -238,11 +240,16 @@ class OrderForm(forms.ModelForm):
                 connection = WarehouseConnection_ST.objects.using('stage').get(pk=connection_id)
 
                 warehouse_id = connection.warehouse1_id
+                warehouse_connection_id = connection.warehouse_connection_id
 
                 products = Product_ST.objects.using('stage').filter(
                     warehouseproduct_st__warehouse_id=warehouse_id
                 ).distinct()
+                routes = Route_ST.objects.using('stage').filter(
+                    warehouse_connection_id=warehouse_connection_id
+                ).distinct()
                 self.fields['product'].queryset = products
+                self.fields['route'].queryset = routes
             except (ValueError, WarehouseConnection_ST.DoesNotExist):
                 pass
         elif self.instance.pk:
@@ -250,6 +257,9 @@ class OrderForm(forms.ModelForm):
             warehouse_id = connection.warehouse1_id
             self.fields['product'].queryset = Product_ST.objects.using('stage').filter(
                 warehouseproduct_st__warehouse_id=warehouse_id
+            ).distinct()
+            self.fields['route'].queryset = Route_ST.objects.using('stage').filter(
+                warehouse_connection_id=connection
             ).distinct()
 
         self.fields['quantity'].widget = forms.NumberInput(attrs={'class': 'form-control'})
@@ -268,7 +278,6 @@ class OrderForm(forms.ModelForm):
         quantity = float(cleaned_data.get('quantity', 0))
 
         if product and warehouse_connection and quantity:
-            # Get the warehouse1 from the selected warehouse connection
             warehouse1 = warehouse_connection.warehouse1
 
 
