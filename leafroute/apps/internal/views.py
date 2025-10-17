@@ -120,24 +120,27 @@ def new_transport(request: HttpRequest) -> HttpResponse:
 
         if order_form.is_valid():
             order_instance = order_form.save(commit=False)
+            order_instance.user = request.user.id
             order_instance.save(using='stage')
-
             messages.success(request, 'New transport added successfully!')
+            return redirect('internal:new_transport')  # ✅ redirect only on success
+
         else:
-            errors = {
-                'order_form': order_form.errors,
-            }
-            for form_name, form_errors in errors.items():
-                if form_errors:
-                    print(f"{form_name} errors: {form_errors}")
-            messages.error(request, 'Error transport route. Please check the form inputs.')
-        return redirect('internal:new_transport')
+            # You can still log form errors for debugging
+            print("Order form errors:", order_form.errors)
+            messages.error(request, 'Error adding transport. Please check the form inputs.')
+
+            # ✅ Don't redirect — re-render the page with the bound form containing errors
+            return render(request, 'internal/new_transport.html', {
+                'order_form': order_form,
+            })
 
     else:
         order_form = OrderForm()
         return render(request, 'internal/new_transport.html', {
             'order_form': order_form,
         })
+
 
 @login_required
 @permission_required('internal.organiser_tasks', raise_exception=True)

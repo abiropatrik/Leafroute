@@ -1,6 +1,6 @@
 from dataclasses import fields
 from django import forms
-from leafroute.apps.internal_stage.models import Address_ST, City_ST, Order_ST, Product_ST, Route_ST, Warehouse_ST, WarehouseConnection_ST, WorkSchedule_ST,Vehicle_ST
+from leafroute.apps.internal_stage.models import Address_ST, City_ST, Order_ST, Product_ST, Route_ST, Warehouse_ST, WarehouseConnection_ST, WorkSchedule_ST,Vehicle_ST, WarehouseProduct_ST
 
 class WorkScheduleForm(forms.ModelForm):
     class Meta:
@@ -212,7 +212,7 @@ class CityForm(forms.ModelForm):
 class OrderForm(forms.ModelForm):
     class Meta:
         model = Order_ST
-        fields = ['product','warehouse_connection','quantity', 'order_date', 'expected_fullfillment_date', 'fulfillment_date', 'order_status', 'expected_co2_emission', 'co2_emmission', 'cost']
+        fields = ['product', 'warehouse_connection', 'quantity', 'order_date', 'expected_fullfillment_date', 'fulfillment_date', 'order_status', 'expected_co2_emission', 'co2_emmission', 'cost']
         labels = {
             'product': 'Termék',
             'warehouse_connection': 'Raktár kapcsolat',
@@ -231,7 +231,6 @@ class OrderForm(forms.ModelForm):
 
         self.fields['product'].queryset = Product_ST.objects.none()
         self.fields['warehouse_connection'].queryset = WarehouseConnection_ST.objects.using('stage').all()
-
 
         if 'warehouse_connection' in self.data:
             try:
@@ -253,8 +252,6 @@ class OrderForm(forms.ModelForm):
                 warehouseproduct_st__warehouse_id=warehouse_id
             ).distinct()
 
-
-
         self.fields['quantity'].widget = forms.NumberInput(attrs={'class': 'form-control'})
         self.fields['order_date'].widget = forms.DateInput(attrs={'type': 'date', 'class': 'form-control'})
         self.fields['expected_fullfillment_date'].widget = forms.DateInput(attrs={'type': 'date', 'class': 'form-control'})
@@ -263,3 +260,26 @@ class OrderForm(forms.ModelForm):
         self.fields['expected_co2_emission'].widget = forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'})
         self.fields['co2_emmission'].widget = forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'})
         self.fields['cost'].widget = forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'})
+
+    def clean(self):
+        cleaned_data = super().clean()
+        product = cleaned_data.get('product')
+        warehouse_connection = cleaned_data.get('warehouse_connection')
+        quantity = float(cleaned_data.get('quantity', 0))
+
+        if product and warehouse_connection and quantity:
+            # Get the warehouse1 from the selected warehouse connection
+            warehouse1 = warehouse_connection.warehouse1
+
+
+            warehouse_product = WarehouseProduct_ST.objects.using('stage').get(
+                product=product,
+                warehouse=warehouse1
+            )
+            free_stock = float(warehouse_product.free_stock or 0)
+
+            if quantity > free_stock:
+                self.add_error('quantity', f'Nincs elegendő készlet a kiválasztott termékből a(z) {warehouse1.address.institution_name} raktárban. Elérhető mennyiség: {free_stock}.')
+
+
+        return cleaned_data

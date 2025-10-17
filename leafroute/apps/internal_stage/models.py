@@ -193,7 +193,7 @@ class WarehouseProduct_ST(models.Model):
 
 class Order_ST(models.Model):
     order_id = models.AutoField(primary_key=True, db_column="OrderID")
-    user = models.ForeignKey(UserProfile_ST, on_delete=models.CASCADE, db_column="UserID")
+    user = models.CharField(max_length=255, null=True, blank=True)
     product = models.ForeignKey(Product_ST, on_delete=models.CASCADE, db_column="ProductID")
     warehouse_connection = models.ForeignKey(WarehouseConnection_ST, on_delete=models.CASCADE, db_column="WarehouseConnectionID")
     route = models.ForeignKey(Route_ST, on_delete=models.CASCADE, db_column="RouteID")
