@@ -3,18 +3,23 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'theme/css/editdata.css' %}?v=3">
+<style>
+/* tiny helper styles for collapse rows */
+.routeparts-row { display: none; }
+.routeparts-cell { padding: 0; background: #f9f9f9; }
+.routeparts-table { width: 100%; border-collapse: collapse; }
+.routeparts-table th, .routeparts-table td { padding: 6px 8px; font-size: 0.95rem; }
+</style>
 {% endblock %}
 
 {% block title %}Új szállítás felvétele{% endblock %}
 
 {% block content %}
 <div class="container">
-    <!-- Messages -->
     {% if messages %}
     <div class="messages">
         {% for message in messages %}
         <div class="alert {{ message.tags }}">{{ message }}</div>
-        <div class="alert {{ message.tags }}">{{ order_form.quantity.errors }}</div>
         {% endfor %}
     </div>
     {% endif %}
@@ -22,40 +27,133 @@
     <h1 class="page-title">Új szállítás felvétele</h1>
 
     <div class="card">
-        <h2 class="card-title">Felvett munkaidők</h2>
+        <h2 class="card-title">Válassz útvonalat</h2>
         <div class="table-responsive">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Route ID</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for route in routes %}
-                    <tr>
-                        <td>{{ route }}</td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="5" class="text-center">No options found.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div class="upload-container">
-   
-        <!-- Manual Entry Section -->
-        <div class="create-card">
-            <form method="post" class="form">
+            <form method="post" id="select-route-form" class="form">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-primary">Útvonal kiválasztása</button>
+
+                <!-- Keep the selected warehouse/product/quantity as hidden inputs so they are posted with the route -->
+                <input type="hidden" name="warehouse_connection" value="{{ order_form.initial.warehouse_connection }}">
+                <input type="hidden" name="product" value="{{ order_form.initial.product }}">
+                <input type="hidden" name="quantity" value="{{ order_form.initial.quantity }}">
+
+                <table class="table">
+                    <tbody>
+                        {% for route in routes %}
+                        <tr>
+                            <!-- radio for single selection. name must match your model field name 'route' -->
+                            <td>
+                                <input type="radio" name="route" value="{{ route.route_id }}" id="route-{{ route.route_id }}">
+                            </td>
+                            <td>
+                                <label for="route-{{ route.route_id }}">{{ route }}</label>
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-secondary btn-sm show-routeparts" data-route-id="{{ route.route_id }}">
+                                    Útvonal részek
+                                </button>
+                            </td>
+                        </tr>
+                        <!-- hidden row to show routeparts when requested -->
+                        <tr class="routeparts-row" id="routeparts-row-{{ route.route_id }}">
+                            <td class="routeparts-cell" colspan="4">
+                                <div id="routeparts-container-{{ route.route_id }}">
+                                    <!-- route parts will be injected here by JS -->
+                                    <div class="text-muted">Kattints a gombra az útvonal részek betöltéséhez.</div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center">No options found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <div style="margin-top: 12px;">
+                    <button type="submit" class="btn btn-primary">Útvonal kiválasztása</button>
+                </div>
             </form>
         </div>
     </div>
-
 </div>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Attach click handlers for routeparts buttons
+    document.querySelectorAll('.show-routeparts').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const routeId = this.dataset.routeId;
+            const container = document.getElementById('routeparts-container-' + routeId);
+            const row = document.getElementById('routeparts-row-' + routeId);
+
+            // Toggle visibility if already loaded
+            if (row.style.display === 'table-row') {
+                row.style.display = 'none';
+                return;
+            }
+
+            // Show loading
+            container.innerHTML = '<div>Loading route parts...</div>';
+            row.style.display = 'table-row';
+
+            try {
+                const resp = await fetch("{% url 'internal:ajax_route_parts' %}?route_id=" + encodeURIComponent(routeId), {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' }
+                });
+                if (!resp.ok) throw new Error('Network response was not ok');
+
+                const data = await resp.json();
+                // data.parts is expected array of objects
+                if (data.parts && data.parts.length) {
+                    const table = document.createElement('table');
+                    table.className = 'routeparts-table';
+                    table.innerHTML = `
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Kezdő cím</th>
+                                <th>Cél cím</th>
+                                <th>Távolság</th>
+                                <th>Szállítás módja</th>
+                                <th>Költség</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.parts.map((p, idx) => `
+                                <tr>
+                                    <td>${idx + 1}</td>
+                                    <td>${p.start_address || ''}</td>
+                                    <td>${p.end_address || ''}</td>
+                                    <td>${p.distance || ''}</td>
+                                    <td>${p.transport_mode || ''}</td>
+                                    <td>${p.route_cost || ''}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    `;
+                    container.innerHTML = '';
+                    container.appendChild(table);
+                } else {
+                    container.innerHTML = '<div class="text-muted">Nincsenek útvonal részek ehhez az útvonalhoz.</div>';
+                }
+            } catch (err) {
+                console.error('Error loading route parts', err);
+                container.innerHTML = '<div class="text-danger">Hiba a betöltés során.</div>';
+            }
+        });
+    });
+
+    // OPTIONAL UX: if user submits without selecting route, warn
+    document.getElementById('select-route-form').addEventListener('submit', function(e) {
+        const chosen = document.querySelector('input[name="route"]:checked');
+        if (!chosen) {
+            e.preventDefault();
+            alert('Kérlek válassz egy útvonalat a folytatáshoz.');
+        }
+    });
+});
+</script>
 {% endblock %}

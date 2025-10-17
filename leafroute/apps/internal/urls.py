@@ -19,4 +19,5 @@ urlpatterns = [
     path('internal/warehouse/update/<int:pk>/', views.warehouse_update, name="warehouse_update"),
     path('internal/ajax/load-products/', views.load_products, name='ajax_load_products'),
     path('internal/new_transport_route', views.new_transport_route, name="new_transport_route"),
+    path('internal/ajax/route-parts/', views.ajax_route_parts, name='ajax_route_parts'),
 ]

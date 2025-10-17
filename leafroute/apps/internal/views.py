@@ -5,9 +5,9 @@ from functools import wraps
 from django.core.exceptions import PermissionDenied
 import csv
 from django.contrib import messages
-from leafroute.apps.internal_stage.models import Order_ST,Product_ST,Route_ST, WarehouseConnection_ST, WorkSchedule_ST,Vehicle_ST,Warehouse_ST,Address_ST,City_ST
+from leafroute.apps.internal_stage.models import RoutePart_ST,Order_ST,Product_ST,Route_ST, WarehouseConnection_ST, WorkSchedule_ST,Vehicle_ST,Warehouse_ST,Address_ST,City_ST
 from leafroute.apps.internal.forms import OrderForm,RouteForm, WarehouseConnectionForm, WorkScheduleForm,VehicleForm,WarehouseForm,AddressForm,CityForm
-
+from django.views.decorators.http import require_GET
 
 def permission_or_required(*perms):
     def decorator(view_func):
@@ -146,33 +146,64 @@ def new_transport_route(request: HttpRequest) -> HttpResponse:
         messages.error(request, 'No transport data found. Please start again.')
         return redirect('internal:new_transport')
 
+    routes = Route_ST.objects.using('stage').filter(warehouse_connection_id=transport_data['warehouse_connection'])
+
     if request.method == 'POST':
         order_form = OrderForm(request.POST)
         if order_form.is_valid():
             order_instance = order_form.save(commit=False)
+
             order_instance.warehouse_connection_id = transport_data['warehouse_connection']
             order_instance.product_id = transport_data['product']
             order_instance.quantity = transport_data['quantity']
             order_instance.save(using='stage')
 
             messages.success(request, 'New transport added successfully')
-
             del request.session['new_transport_data']
             return redirect('internal:new_transport')
-
+        else:
+            messages.error(request, 'Error adding transport. Please check the form inputs: %s' % order_form.errors)
     else:
         order_form = OrderForm(initial={
             'warehouse_connection': transport_data['warehouse_connection'],
             'product': transport_data['product'],
             'quantity': transport_data['quantity'],
         })
-        routes = Route_ST.objects.using('stage').filter(warehouse_connection_id=transport_data['warehouse_connection'])
-
 
     return render(request, 'internal/new_transport_route.html', {
         'order_form': order_form,
         'routes': routes,
     })
+
+
+@require_GET
+@login_required
+def ajax_route_parts(request):
+    """Return JSON list of route parts for a given route_id."""
+    route_id = request.GET.get('route_id')
+    if not route_id:
+        return JsonResponse({'error': 'route_id missing'}, status=400)
+
+    try:
+        parts_qs = RoutePart_ST.objects.using('stage').select_related(
+            'start_address', 'end_address'
+        ).filter(route_id=route_id).order_by('route_part_id')
+
+        parts = []
+        for p in parts_qs:
+            parts.append({
+                'id': p.route_part_id,
+                'distance': p.distance,
+                'transport_mode': p.transport_mode,
+                'start_address': p.start_address.institution_name if p.start_address else '',
+                'end_address': p.end_address.institution_name if p.end_address else '',
+                'route_cost': p.route_cost,
+            })
+
+        return JsonResponse({'parts': parts})
+    except Exception as exc:
+        return JsonResponse({'error': str(exc)}, status=500)
+
 
 @login_required
 @permission_required('internal.organiser_tasks', raise_exception=True)
