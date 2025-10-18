@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse,HttpRequest,HttpResponseForbidden,JsonResponse
+from django.http import HttpResponse,HttpRequest,HttpResponseForbidden,JsonResponse,HttpResponseBadRequest
 from django.contrib.auth.decorators import login_required, permission_required
 from functools import wraps
 from django.core.exceptions import PermissionDenied
@@ -7,7 +7,9 @@ import csv
 from django.contrib import messages
 from leafroute.apps.internal_stage.models import RoutePart_ST,Order_ST,Product_ST,Route_ST, WarehouseConnection_ST, WorkSchedule_ST,Vehicle_ST,Warehouse_ST,Address_ST,City_ST
 from leafroute.apps.internal.forms import OrderForm,RouteForm, WarehouseConnectionForm, WorkScheduleForm,VehicleForm,WarehouseForm,AddressForm,CityForm
+from leafroute.apps.internal.utils import tempshipment
 from django.views.decorators.http import require_GET
+
 
 def permission_or_required(*perms):
     def decorator(view_func):
@@ -140,19 +142,22 @@ def new_transport(request: HttpRequest) -> HttpResponse:
 
 @login_required
 @permission_or_required('internal.organiser_tasks')
-def new_transport_route(request: HttpRequest) -> HttpResponse:
+def new_transport_route(request):
     transport_data = request.session.get('new_transport_data')
     if not transport_data:
         messages.error(request, 'No transport data found. Please start again.')
         return redirect('internal:new_transport')
 
-    routes = Route_ST.objects.using('stage').filter(warehouse_connection_id=transport_data['warehouse_connection'])
+    # load routes
+    routes = Route_ST.objects.using('stage').filter(
+        warehouse_connection_id=transport_data['warehouse_connection']
+    )
 
+    # handle POST (final save)
     if request.method == 'POST':
         order_form = OrderForm(request.POST)
         if order_form.is_valid():
             order_instance = order_form.save(commit=False)
-
             order_instance.warehouse_connection_id = transport_data['warehouse_connection']
             order_instance.product_id = transport_data['product']
             order_instance.quantity = transport_data['quantity']
@@ -170,39 +175,76 @@ def new_transport_route(request: HttpRequest) -> HttpResponse:
             'quantity': transport_data['quantity'],
         })
 
+    # precompute aggregates for each route (so they are visible immediately)
+    routes_with_stats = []
+    for route in routes:
+        parts = RoutePart_ST.objects.using('stage').filter(route=route)
+        total_emission = total_duration = total_cost = 0.0
+        for part in parts:
+            _, emission, _, duration, cost = tempshipment(part)
+            total_emission += emission or 0.0
+            total_duration += duration or 0.0
+            total_cost += cost or 0.0
+
+        routes_with_stats.append({
+            'route': route,
+            'expected_emission': round(total_emission, 2),
+            'expected_duration': round(total_duration, 2),
+            'expected_cost': round(total_cost, 2),
+        })
+
     return render(request, 'internal/new_transport_route.html', {
         'order_form': order_form,
+        'routes_with_stats': routes_with_stats,
+        # also include raw routes for the template loop if you prefer:
         'routes': routes,
     })
+
 
 
 @require_GET
 @login_required
 def ajax_route_parts(request):
-    """Return JSON list of route parts for a given route_id."""
     route_id = request.GET.get('route_id')
     if not route_id:
-        return JsonResponse({'error': 'route_id missing'}, status=400)
+        return HttpResponseBadRequest('route_id missing')
 
-    try:
-        parts_qs = RoutePart_ST.objects.using('stage').select_related(
-            'start_address', 'end_address'
-        ).filter(route_id=route_id).order_by('route_part_id')
+    # NOTE: select_related path must match your models:
+    # RoutePart_ST -> route (Route_ST) -> warehouse_connection (WarehouseConnection_ST) -> warehouse1 (Warehouse_ST)
+    parts_qs = RoutePart_ST.objects.using('stage').select_related(
+        'start_address', 'end_address', 'route__warehouse_connection__warehouse1'
+    ).filter(route_id=route_id).order_by('route_part_id')
 
-        parts = []
-        for p in parts_qs:
-            parts.append({
-                'id': p.route_part_id,
-                'distance': p.distance,
-                'transport_mode': p.transport_mode,
-                'start_address': p.start_address.institution_name if p.start_address else '',
-                'end_address': p.end_address.institution_name if p.end_address else '',
-                'route_cost': p.route_cost,
-            })
+    parts_data = []
+    total_emission = total_duration = total_cost = 0.0
 
-        return JsonResponse({'parts': parts})
-    except Exception as exc:
-        return JsonResponse({'error': str(exc)}, status=500)
+    for p in parts_qs:
+        vehicle, emission, user, duration, cost = tempshipment(p)
+        total_emission += emission or 0.0
+        total_duration += duration or 0.0
+        total_cost += cost or 0.0
+
+        parts_data.append({
+            'id': p.route_part_id,
+            'distance': p.distance,
+            'mode': p.transport_mode,
+            'start_address': p.start_address.institution_name if p.start_address else '',
+            'end_address': p.end_address.institution_name if p.end_address else '',
+            'vehicle': str(vehicle) if vehicle else 'N/A',
+            'driver': str(user) if user else 'N/A',
+            'emission': round(emission, 2),
+            'duration': round(duration, 2),
+            'cost': round(cost, 2),
+        })
+
+    return JsonResponse({
+        'parts': parts_data,
+        'aggregates': {
+            'expected_emission': round(total_emission, 2),
+            'expected_duration': round(total_duration, 2),
+            'expected_cost': round(total_cost, 2),
+        }
+    })
 
 
 @login_required
