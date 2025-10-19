@@ -259,8 +259,18 @@ def new_route(request: HttpRequest) -> HttpResponse:
         route_form = RouteForm(request.POST)
 
         if warehouse_conn_form.is_valid() and route_form.is_valid():
-            warehouse_conn_instance = warehouse_conn_form.save(commit=False)
-            warehouse_conn_instance.save(using='stage')
+            warehouse1 = warehouse_conn_form.cleaned_data['warehouse1']
+            warehouse2 = warehouse_conn_form.cleaned_data['warehouse2']
+            existing_conn = WarehouseConnection_ST.objects.using('stage').filter(
+                warehouse1=warehouse1,
+                warehouse2=warehouse2
+            ).first()
+
+            if existing_conn:
+                warehouse_conn_instance = existing_conn
+            else:
+                warehouse_conn_instance = warehouse_conn_form.save(commit=False)
+                warehouse_conn_instance.save(using='stage')
 
             route_instance = route_form.save(commit=False)
             route_instance.warehouse_connection = warehouse_conn_instance
