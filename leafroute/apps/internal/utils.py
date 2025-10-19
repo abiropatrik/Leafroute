@@ -28,9 +28,8 @@ def vehicle_chooser(routepart: RoutePart):
     else:
         vehicletype = []
 
-    print(vehicletype)
     vehicles = Vehicle.objects.using('default').filter(
-        address_id=routepart.route.warehouse_connection.warehouse1.address.address_id,
+        address_id=routepart.start_address.address_id,
         type__in=vehicletype
     )
 
@@ -51,10 +50,24 @@ def vehicle_chooser(routepart: RoutePart):
 
 
 def user_chooser(routepart: RoutePart):
+    transport_mode = routepart.transport_mode
+
+    if transport_mode == 'road':
+        required_job = ['driver']
+    elif transport_mode == 'rail':
+        required_job = ['train_operator']
+    elif transport_mode == 'air':
+        required_job = ['pilot']
+    elif transport_mode == 'sea':
+        required_job = ['captain']
+    else:
+        required_job = []
+
     users = UserProfile.objects.using('default').filter(
-        address_id=routepart.route.warehouse_connection.warehouse1.address.address_id,
-        job='driver'
+        address_id=routepart.start_address.address_id,
+        job__in=required_job
     )
+    print(users)
     return min(users, key=lambda u: u.co2_saved, default=None)
 
 

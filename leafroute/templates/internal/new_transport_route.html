@@ -2,13 +2,7 @@
 {% load static %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'theme/css/editdata.css' %}?v=3">
-<style>
-.routeparts-row { display: none; }
-.routeparts-cell { padding: 0; background: #f9f9f9; }
-.routeparts-table { width: 100%; border-collapse: collapse; }
-.routeparts-table th, .routeparts-table td { padding: 6px 8px; font-size: 0.95rem; }
-</style>
+<link rel="stylesheet" href="{% static 'theme/css/editdata.css' %}?v=4">
 {% endblock %}
 
 {% block title %}Új szállítás felvétele{% endblock %}
@@ -36,18 +30,24 @@
                     <tbody>
                         {% for item in routes_with_stats %}
                         <tr>
-                            <td>
+                            <td style="padding-left: 2rem;">
                                 <input type="radio" name="route" value="{{ item.route.route_id }}" id="route-{{ item.route.route_id }}">
                             </td>
-                            <td>
-                                <label for="route-{{ item.route.route_id }}">{{ item.route }}</label>
-                                <div>Várható CO2 kibocsátás:{{ item.expected_emission }}</div>
-                                <div>Várható időtartam: {{ item.expected_duration }}</div>
-                                <div>Várható költség: {{ item.expected_cost }}</div>
+                            <td style="padding-left: 4rem;">
+                                <label for="route-{{ item.route.route_id }}"><h3>Elsődleges szállító eszköz:</h3></label>
+                                <div><strong>Várható CO2 kibocsátás:</strong></div>
+                                <div><strong>Várható időtartam:</strong> </div>
+                                <div><strong>Várható költség:</strong></div>
                             </td>
-                            <td>
+                            <td style="padding-right: 4rem;">
+                                <label for="route-{{ item.route.route_id }}" style="text-align: right;"><h3>{{ item.route }}</h3></label>
+                                <div style="text-align: right;">{{ item.expected_emission }}</div>
+                                <div style="text-align: right;">{{ item.expected_duration }}</div>
+                                <div style="text-align: right;">{{ item.expected_cost }}</div>
+                            </td>
+                            <td style="padding-right: 2rem;">
                                 <button type="button" class="btn btn-secondary btn-sm show-routeparts" data-route-id="{{ item.route.route_id }}">
-                                    Útvonal részek
+                                    <img src="{% static 'theme/img/plus_white.png' %}" alt="Down arrow" style="height: 20px;">
                                 </button>
                             </td>
                         </tr>
@@ -55,9 +55,7 @@
                         <!-- hidden row for route parts -->
                         <tr class="routeparts-row" id="routeparts-row-{{ item.route.route_id }}">
                             <td class="routeparts-cell" colspan="6">
-                                <div id="routeparts-container-{{ item.route.route_id }}">
-                                    <div class="text-muted">Kattints a gombra az útvonal részek betöltéséhez.</div>
-                                </div>
+                                <div id="routeparts-container-{{ item.route.route_id }}"></div>
                             </td>
                         </tr>
                         {% empty %}
@@ -65,10 +63,8 @@
                         {% endfor %}
                     </tbody>
                 </table>
-
-                <div style="margin-top: 12px;">
-                    <button type="submit" class="btn btn-primary">Útvonal kiválasztása</button>
-                </div>
+                <button type="submit" class="btn btn-primary">Útvonal kiválasztása</button>
+                
             </form>
         </div>
     </div>
@@ -78,7 +74,6 @@
 document.addEventListener('DOMContentLoaded', function() {
     const container = document.querySelector('.table-responsive');
 
-    // Event delegation: listen for clicks on .show-routeparts buttons
     container.addEventListener('click', async function(e) {
         const btn = e.target.closest('.show-routeparts');
         if (!btn) return;
@@ -114,7 +109,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 table.innerHTML = `
                     <thead>
                         <tr>
-                            <th>#</th>
+                            <th>Útszakasz azonosító</th>
                             <th>Kezdő cím</th>
                             <th>Cél cím</th>
                             <th>Távolság</th>

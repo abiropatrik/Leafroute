@@ -175,28 +175,28 @@ def new_transport_route(request):
             'quantity': transport_data['quantity'],
         })
 
-    # precompute aggregates for each route (so they are visible immediately)
     routes_with_stats = []
     for route in routes:
         parts = RoutePart_ST.objects.using('stage').filter(route=route)
         total_emission = total_duration = total_cost = 0.0
         for part in parts:
-            _, emission, _, duration, cost = tempshipment(part)
+            vehicle, emission, user, duration, cost = tempshipment(part)
             total_emission += emission or 0.0
             total_duration += duration or 0.0
             total_cost += cost or 0.0
 
-        routes_with_stats.append({
-            'route': route,
-            'expected_emission': round(total_emission, 2),
-            'expected_duration': round(total_duration, 2),
-            'expected_cost': round(total_cost, 2),
-        })
+        if vehicle is not None and user is not None:
+            routes_with_stats.append({
+                'route': route,
+                'expected_emission': round(total_emission, 2),
+                'expected_duration': round(total_duration, 2),
+                'expected_cost': round(total_cost, 2),
+            })
+    routes_with_stats.sort(key=lambda x: x['expected_emission'])
 
     return render(request, 'internal/new_transport_route.html', {
         'order_form': order_form,
         'routes_with_stats': routes_with_stats,
-        # also include raw routes for the template loop if you prefer:
         'routes': routes,
     })
 
