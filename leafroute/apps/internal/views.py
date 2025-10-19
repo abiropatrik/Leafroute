@@ -179,15 +179,19 @@ def new_transport_route(request):
     for route in routes:
         parts = RoutePart_ST.objects.using('stage').filter(route=route)
         total_emission = total_duration = total_cost = 0.0
+        used_vehicles = []
         for part in parts:
             vehicle, emission, user, duration, cost = tempshipment(part)
+            used_vehicles.append(vehicle.type if vehicle else 'N/A')
             total_emission += emission or 0.0
             total_duration += duration or 0.0
             total_cost += cost or 0.0
 
+        used_vehicles_str = " -> ".join(used_vehicles)
         if vehicle is not None and user is not None:
             routes_with_stats.append({
                 'route': route,
+                'used_vehicles': used_vehicles_str,
                 'expected_emission': round(total_emission, 2),
                 'expected_duration': round(total_duration, 2),
                 'expected_cost': round(total_cost, 2),

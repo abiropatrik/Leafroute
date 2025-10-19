@@ -18,7 +18,7 @@
     {% endif %}
 
     <div class="card">
-        <h2 class="card-title">Szállítási lehetőség a megadott feltételek alapján:</h2>
+        <h2 class="card-title">Szállítási lehetőségek a megadott feltételek alapján:</h2>
         <div class="table-responsive">
             <form method="post" id="select-route-form" class="form">
                 {% csrf_token %}
@@ -34,13 +34,13 @@
                                 <input type="radio" name="route" value="{{ item.route.route_id }}" id="route-{{ item.route.route_id }}">
                             </td>
                             <td style="padding-left: 4rem;">
-                                <label for="route-{{ item.route.route_id }}"><h3>Elsődleges szállító eszköz:</h3></label>
+                                <label for="route-{{ item.route.route_id }}"><h3>Használt járművek:</h3></label>
                                 <div><strong>Várható CO2 kibocsátás:</strong></div>
                                 <div><strong>Várható időtartam:</strong> </div>
                                 <div><strong>Várható költség:</strong></div>
                             </td>
                             <td style="padding-right: 4rem;">
-                                <label for="route-{{ item.route.route_id }}" style="text-align: right;"><h3>{{ item.route }}</h3></label>
+                                <label for="route-{{ item.route.route_id }}" style="text-align: right;"><h3>{{ item.used_vehicles }}</h3></label>
                                 <div style="text-align: right;">{{ item.expected_emission }}</div>
                                 <div style="text-align: right;">{{ item.expected_duration }}</div>
                                 <div style="text-align: right;">{{ item.expected_cost }}</div>
