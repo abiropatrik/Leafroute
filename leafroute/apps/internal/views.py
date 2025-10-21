@@ -1,3 +1,4 @@
+from django.utils import timezone
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse,HttpRequest,HttpResponseForbidden,JsonResponse,HttpResponseBadRequest
 from django.contrib.auth.decorators import login_required, permission_required
@@ -5,10 +6,11 @@ from functools import wraps
 from django.core.exceptions import PermissionDenied
 import csv
 from django.contrib import messages
-from leafroute.apps.internal_stage.models import RoutePart_ST,Order_ST,Product_ST,Route_ST, WarehouseConnection_ST, WorkSchedule_ST,Vehicle_ST,Warehouse_ST,Address_ST,City_ST
+from leafroute.apps.internal_stage.models import Shipment_ST,RoutePart_ST,Order_ST,Product_ST,Route_ST, WarehouseConnection_ST, WorkSchedule_ST,Vehicle_ST,Warehouse_ST,Address_ST,City_ST,UserShipments_ST
 from leafroute.apps.internal.forms import OrderForm,RouteForm, WarehouseConnectionForm, WorkScheduleForm,VehicleForm,WarehouseForm,AddressForm,CityForm
 from leafroute.apps.internal.utils import tempshipment
 from django.views.decorators.http import require_GET
+from datetime import timedelta
 
 
 def permission_or_required(*perms):
@@ -24,7 +26,7 @@ def permission_or_required(*perms):
 @login_required
 def workschedule(request: HttpRequest) -> HttpResponse:
     if request.method == 'POST':
-        # Handle CSV Upload
+        # CSV Upload
         if 'csv_file' in request.FILES:
             csv_file = request.FILES['csv_file']
             if not csv_file.name.endswith('.csv'):
@@ -46,7 +48,7 @@ def workschedule(request: HttpRequest) -> HttpResponse:
                 messages.error(request, f"Error uploading CSV: {e}")
             return redirect('internal:workschedule')
 
-        # Handle Manual Entry
+        # Manual Entry
         else:
             form = WorkScheduleForm(request.POST)
             if form.is_valid():
@@ -60,7 +62,6 @@ def workschedule(request: HttpRequest) -> HttpResponse:
 
     else:
         form = WorkScheduleForm()
-        # Query all work schedules ordered by work_day descending
         work_schedules = WorkSchedule_ST.objects.using('stage').filter(user=request.user.id).order_by('-work_day')
         return render(request, 'internal/workschedule.html', {'form': form, 'work_schedules': work_schedules})
     
@@ -148,12 +149,10 @@ def new_transport_route(request):
         messages.error(request, 'No transport data found. Please start again.')
         return redirect('internal:new_transport')
 
-    # load routes
     routes = Route_ST.objects.using('stage').filter(
         warehouse_connection_id=transport_data['warehouse_connection']
     )
 
-    # handle POST (final save)
     if request.method == 'POST':
         order_form = OrderForm(request.POST)
         if order_form.is_valid():
@@ -161,13 +160,63 @@ def new_transport_route(request):
             order_instance.warehouse_connection_id = transport_data['warehouse_connection']
             order_instance.product_id = transport_data['product']
             order_instance.quantity = transport_data['quantity']
+            order_instance.order_date = timezone.now().strftime('%Y-%m-%d %H:%M:%S')
+            order_instance.order_status = 'pending'
+
+            route_id = request.POST.get('route')
+            if route_id:
+                order_instance.route_id = route_id
+
+            co2_raw = request.POST.get('expected_co2_emission', '') or ''
+            duration_raw = request.POST.get('expected_duration', '') or '0'
+
+            try:
+                order_instance.expected_co2_emission = float(co2_raw)
+            except (TypeError, ValueError):
+                order_instance.expected_co2_emission = 0.0
+                messages.warning(request, f'Invalid CO₂ value "{co2_raw}". Saved as 0.0.')
+
+            try:
+                duration_hours = float(duration_raw)
+                expected_dt = timezone.now() + timedelta(hours=duration_hours)
+                order_instance.expected_fullfillment_date = expected_dt.strftime('%Y-%m-%d %H:%M:%S')
+            except (TypeError, ValueError):
+                order_instance.expected_fullfillment_date = timezone.now().strftime('%Y-%m-%d %H:%M:%S')
+                messages.warning(request, f'Invalid duration value "{duration_raw}". Defaulted to current time.')
+
+            order_instance.user = str(request.user.id)
             order_instance.save(using='stage')
 
-            messages.success(request, 'New transport added successfully')
+            try:
+                selected_route = Route_ST.objects.using('stage').get(pk=route_id)
+                route_parts = RoutePart_ST.objects.using('stage').filter(route=selected_route)
+
+                for part in route_parts:
+                    vehicle, emission, user, duration, cost = tempshipment(part)
+
+                    shipment_instance=Shipment_ST.objects.using('stage').create(
+                        order=order_instance,
+                        vehicle=Vehicle_ST.objects.using('stage').get(pk=vehicle.vehicle_id),
+                        product_id=transport_data['product'],
+                        route_part=part,
+                        status='pending',
+                    )
+                    UserShipments_ST.objects.using('stage').get_or_create(
+                        user=user.id,
+                        shipment=shipment_instance
+                    )
+
+
+            except Exception as e:
+                messages.error(request, f'Error creating shipments: {e}')
+
+            messages.success(request, 'New transport and shipments added successfully.')
             del request.session['new_transport_data']
             return redirect('internal:new_transport')
+
         else:
-            messages.error(request, 'Error adding transport. Please check the form inputs: %s' % order_form.errors)
+            messages.error(request, f'Error adding transport. Please check form inputs: {order_form.errors}')
+
     else:
         order_form = OrderForm(initial={
             'warehouse_connection': transport_data['warehouse_connection'],
@@ -180,6 +229,7 @@ def new_transport_route(request):
         parts = RoutePart_ST.objects.using('stage').filter(route=route)
         total_emission = total_duration = total_cost = 0.0
         used_vehicles = []
+
         for part in parts:
             vehicle, emission, user, duration, cost = tempshipment(part)
             used_vehicles.append(vehicle.type if vehicle else 'N/A')
@@ -196,6 +246,7 @@ def new_transport_route(request):
                 'expected_duration': round(total_duration, 2),
                 'expected_cost': round(total_cost, 2),
             })
+
     routes_with_stats.sort(key=lambda x: x['expected_emission'])
 
     return render(request, 'internal/new_transport_route.html', {
@@ -213,8 +264,7 @@ def ajax_route_parts(request):
     if not route_id:
         return HttpResponseBadRequest('route_id missing')
 
-    # NOTE: select_related path must match your models:
-    # RoutePart_ST -> route (Route_ST) -> warehouse_connection (WarehouseConnection_ST) -> warehouse1 (Warehouse_ST)
+
     parts_qs = RoutePart_ST.objects.using('stage').select_related(
         'start_address', 'end_address', 'route__warehouse_connection__warehouse1'
     ).filter(route_id=route_id).order_by('route_part_id')

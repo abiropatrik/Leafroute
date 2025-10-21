@@ -67,7 +67,6 @@ def user_chooser(routepart: RoutePart):
         address_id=routepart.start_address.address_id,
         job__in=required_job
     )
-    print(users)
     return min(users, key=lambda u: u.co2_saved, default=None)
 
 

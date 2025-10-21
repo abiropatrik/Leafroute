@@ -237,7 +237,7 @@ class Shipment_ST(models.Model):
 
 
 class UserShipments_ST(models.Model):
-    user = models.ForeignKey(UserProfile_ST, on_delete=models.CASCADE, db_column="UserID")
+    user = models.CharField(max_length=255, null=True, blank=True)
     shipment = models.ForeignKey(Shipment_ST, on_delete=models.CASCADE, db_column="ShipmentID")
 
     class Meta:

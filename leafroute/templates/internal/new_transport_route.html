@@ -31,7 +31,12 @@
                         {% for item in routes_with_stats %}
                         <tr>
                             <td style="padding-left: 2rem;">
-                                <input type="radio" name="route" value="{{ item.route.route_id }}" id="route-{{ item.route.route_id }}">
+                                <input type="radio" 
+                                       name="route" 
+                                       value="{{ item.route.route_id }}" 
+                                       id="route-{{ item.route.route_id }}" 
+                                       data-expected-emission="{{ item.expected_emission }}"
+                                       data-expected-duration="{{ item.expected_duration }}">
                             </td>
                             <td style="padding-left: 4rem;">
                                 <label for="route-{{ item.route.route_id }}"><h3>Használt járművek:</h3></label>
@@ -63,6 +68,8 @@
                         {% endfor %}
                     </tbody>
                 </table>
+                <input type="hidden" name="expected_co2_emission" id="expected-co2-input" value="">
+                <input type="hidden" name="expected_duration" id="expected-duration-input" value="">
                 <button type="submit" class="btn btn-primary">Útvonal kiválasztása</button>
                 
             </form>
@@ -73,7 +80,11 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const container = document.querySelector('.table-responsive');
+    const co2Input = document.getElementById('expected-co2-input');
+    const durationInput = document.getElementById('expected-duration-input');
+    const form = document.getElementById('select-route-form');
 
+    // Handle show/hide and load of route parts via AJAX
     container.addEventListener('click', async function(e) {
         const btn = e.target.closest('.show-routeparts');
         if (!btn) return;
@@ -82,13 +93,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const partsContainer = document.getElementById('routeparts-container-' + routeId);
         const row = document.getElementById('routeparts-row-' + routeId);
 
-        // toggle: if shown, hide
+        // Toggle visibility
         if (row.style.display === 'table-row') {
             row.style.display = 'none';
             return;
         }
 
-        // show loading & reveal
+        // Show loading message and reveal the row
         partsContainer.innerHTML = '<div>Loading route parts...</div>';
         row.style.display = 'table-row';
 
@@ -97,12 +108,23 @@ document.addEventListener('DOMContentLoaded', function() {
             const resp = await fetch(url, { method: 'GET', headers: { 'Accept': 'application/json' } });
 
             if (!resp.ok) {
-                const txt = await resp.text().catch(()=>null);
+                const txt = await resp.text().catch(() => null);
                 throw new Error('Server error: ' + (txt || resp.status));
             }
 
             const data = await resp.json();
 
+            // If backend sent aggregates, update hidden inputs
+            if (data.aggregates) {
+                if (typeof data.aggregates.expected_emission !== 'undefined') {
+                    co2Input.value = data.aggregates.expected_emission;
+                }
+                if (typeof data.aggregates.expected_duration !== 'undefined') {
+                    durationInput.value = data.aggregates.expected_duration;
+                }
+            }
+
+            // Build table for route parts
             if (data.parts && data.parts.length) {
                 const table = document.createElement('table');
                 table.className = 'routeparts-table';
@@ -149,16 +171,32 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // form submit validation
-    const form = document.getElementById('select-route-form');
+    // When a route radio is selected, update hidden emission and duration fields
+    document.querySelectorAll('input[name="route"]').forEach(radio => {
+        radio.addEventListener('change', function(e) {
+            const emission = e.target.dataset.expectedEmission;
+            const duration = e.target.dataset.expectedDuration;
+            co2Input.value = emission ?? '';
+            durationInput.value = duration ?? '';
+        });
+    });
+
+    // Form submit validation
     form.addEventListener('submit', function(e) {
         const chosen = form.querySelector('input[name="route"]:checked');
         if (!chosen) {
             e.preventDefault();
             alert('Kérlek válassz egy útvonalat a folytatáshoz.');
+            return;
+        }
+
+        // Optional: sanity check
+        if (co2Input.value === '' || durationInput.value === '') {
+            console.warn('Warning: missing expected emission or duration before submit');
         }
     });
 });
 </script>
+
 
 {% endblock %}
