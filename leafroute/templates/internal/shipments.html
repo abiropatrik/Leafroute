@@ -1,9 +1,70 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Fuvar nyilvántartása{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'theme/css/editdata.css' %}?v=3">
+{% endblock %}
+
+{% block title %}Fuvarjaim{% endblock %}
 
 {% block content %}
-<h1>
-    Fuvar nyilvántartása
-</h1>
+<div class="container">
+    <!-- Messages -->
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="alert {{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}    
+
+    <div class="card">
+        <h2 class="card-title">Fuvarok</h2>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Vehicle</th>
+                        <th>Product</th>
+                        <th>Start Address</th>
+                        <th>End Address</th>
+                        <th>Shipment start date</th>
+                        <th>Fuel consumed</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for shipment in shipments %}
+                    <tr>
+                        <td>{{ shipment.vehicle }}</td>
+                        <td>{{ shipment.product }}</td>
+                        <td>{{ shipment.route_part.start_address }}</td>
+                        <td>{{ shipment.route_part.end_address }}</td>
+                        <td>{{ shipment.shipment_start_date }}</td>
+                        <td>{{ shipment.fuel_consumed }}</td>
+                        <td>{{ shipment.status }}</td>
+                        <td>{{ shipment.get_status_display }}</td> <td>
+                            {% if shipment.status == 'pending' %}
+                                <form action="{% url 'internal:activate_shipment' shipment.pk %}" method="POST" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-primary btn-sm">Fuvar megkezdése</button>
+                                </form>
+                            {% else %}
+                                <form action="{% url 'internal:completing_shipment' shipment.pk %}" method="POST" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-primary btn-sm">Fuvar befejezése</button>
+                                </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center">Nincs felvett fuvarod.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 {% endblock %}

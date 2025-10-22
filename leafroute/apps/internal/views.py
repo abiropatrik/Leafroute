@@ -7,9 +7,9 @@ from django.core.exceptions import PermissionDenied
 import csv
 from django.contrib import messages
 from leafroute.apps.internal_stage.models import Shipment_ST,RoutePart_ST,Order_ST,Product_ST,Route_ST, WarehouseConnection_ST, WorkSchedule_ST,Vehicle_ST,Warehouse_ST,Address_ST,City_ST,UserShipments_ST
-from leafroute.apps.internal.forms import OrderForm,RouteForm, WarehouseConnectionForm, WorkScheduleForm,VehicleForm,WarehouseForm,AddressForm,CityForm
+from leafroute.apps.internal.forms import OrderForm,RouteForm, WarehouseConnectionForm, WorkScheduleForm,VehicleForm,WarehouseForm,AddressForm,CityForm,ShipmentForm
 from leafroute.apps.internal.utils import tempshipment
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET,require_POST
 from datetime import timedelta
 
 
@@ -384,7 +384,39 @@ def dashboards(request: HttpRequest) -> HttpResponse:
 @login_required
 @permission_or_required('internal.driver_tasks')
 def shipments(request: HttpRequest) -> HttpResponse:
-    return render(request,'internal/shipments.html')
+    form = ShipmentForm()
+    usershipments=UserShipments_ST.objects.using('stage').filter(user=request.user.id)
+    shipment_ids = usershipments.values_list('shipment_id', flat=True)
+    shipments = Shipment_ST.objects.using('stage').filter(shipment_id__in=shipment_ids, status__in =['active','pending'])
+    return render(request, 'internal/shipments.html', {'form': form, 'shipments': shipments})
+
+
+@login_required
+@permission_or_required('internal.driver_tasks')
+@require_POST  
+def activate_shipment(request, pk):
+    shipment = get_object_or_404(Shipment_ST, pk=pk)
+
+    if shipment.status == 'pending':
+        shipment.status = 'active'
+        shipment.save()
+        messages.success(request, f"Shipment {shipment.shipment_id} has been activated.")
+
+    return redirect('internal:shipments')
+
+@login_required
+@permission_or_required('internal.driver_tasks')
+@require_POST  
+def completing_shipment(request, pk):
+    shipment = get_object_or_404(Shipment_ST, pk=pk)
+
+    if shipment.status == 'active':
+        shipment.status = 'done'
+        shipment.save()
+        messages.success(request, f"Shipment {shipment.shipment_id} has been completed.")
+
+    return redirect('internal:shipments')
+
 
 @login_required
 def workschedule_update(request: HttpRequest, pk: int) -> HttpResponse:
