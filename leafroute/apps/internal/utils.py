@@ -30,7 +30,8 @@ def vehicle_chooser(routepart: RoutePart):
 
     vehicles = Vehicle.objects.using('default').filter(
         address_id=routepart.start_address.address_id,
-        type__in=vehicletype
+        type__in=vehicletype,
+        status='available'
     )
 
     def emission_for(vehicle):

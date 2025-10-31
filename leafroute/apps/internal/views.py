@@ -10,7 +10,7 @@ from leafroute.apps.internal_stage.models import Shipment_ST,RoutePart_ST,Order_
 from leafroute.apps.internal.forms import OrderForm,RouteForm, WarehouseConnectionForm, WorkScheduleForm,VehicleForm,WarehouseForm,AddressForm,CityForm,ShipmentForm
 from leafroute.apps.internal.utils import tempshipment
 from django.views.decorators.http import require_GET,require_POST
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 
 def permission_or_required(*perms):
@@ -112,7 +112,15 @@ def vehicle_settings(request: HttpRequest) -> HttpResponse:
 
     else:
         form = VehicleForm()
-        vehicles = Vehicle_ST.objects.using('stage')
+        if request.user.has_perm('internal.organiser_tasks'):
+            vehicles = Vehicle_ST.objects.using('stage')
+        elif request.user.has_perm('internal.driver_tasks'):
+            usershipments=UserShipments_ST.objects.using('stage').filter(user=request.user.id)
+            shipment_ids = usershipments.values_list('shipment_id', flat=True)
+            shipments = Shipment_ST.objects.using('stage').filter(shipment_id__in=shipment_ids)
+            vehicle_ids = shipments.values_list('vehicle_id', flat=True).distinct()
+            vehicles = Vehicle_ST.objects.using('stage').filter(pk__in=vehicle_ids)
+
         return render(request, 'internal/vehicle_settings.html', {'form': form, 'vehicles': vehicles})
 
 @login_required
@@ -399,8 +407,11 @@ def activate_shipment(request, pk):
 
     if shipment.status == 'pending':
         shipment.status = 'active'
+        shipment.vehicle.status = 'moving'
+        shipment.shipment_start_date=timezone.now().strftime('%Y-%m-%d %H:%M:%S')
         shipment.save()
-        messages.success(request, f"Shipment {shipment.shipment_id} has been activated.")
+        shipment.vehicle.save()
+        messages.success(request, f"Shipment {shipment.shipment_id} has been started.")
 
     return redirect('internal:shipments')
 
@@ -412,7 +423,11 @@ def completing_shipment(request, pk):
 
     if shipment.status == 'active':
         shipment.status = 'done'
+        shipment.vehicle.status='available'
+        shipment.vehicle.address=shipment.route_part.end_address
+        shipment.shipment_end_date=timezone.now().strftime('%Y-%m-%d %H:%M:%S')
         shipment.save()
+        shipment.vehicle.save()
         messages.success(request, f"Shipment {shipment.shipment_id} has been completed.")
 
     return redirect('internal:shipments')
