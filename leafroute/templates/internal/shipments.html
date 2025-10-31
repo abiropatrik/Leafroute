@@ -29,7 +29,6 @@
                         <th>Start Address</th>
                         <th>End Address</th>
                         <th>Shipment start date</th>
-                        <th>Fuel consumed</th>
                         <th>Status</th>
                     </tr>
                 </thead>
@@ -41,7 +40,6 @@
                         <td>{{ shipment.route_part.start_address }}</td>
                         <td>{{ shipment.route_part.end_address }}</td>
                         <td>{{ shipment.shipment_start_date }}</td>
-                        <td>{{ shipment.fuel_consumed }}</td>
                         <td>{{ shipment.status }}</td>
                         <td>{{ shipment.get_status_display }}</td> <td>
                             {% if shipment.status == 'pending' %}
@@ -50,7 +48,10 @@
                                     <button type="submit" class="btn btn-primary btn-sm">Fuvar megkezdése</button>
                                 </form>
                             {% else %}
-                                <a href="{% url 'internal:shipment_update' shipment.pk %}" class="btn btn-primary btn-sm">Befejezés</a>
+                                <form action="{% url 'internal:completing_shipment' shipment.pk %}" method="POST" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-primary btn-sm">Fuvar befejezése</button>
+                                </form>
                             {% endif %}
                         </td>
                     </tr>

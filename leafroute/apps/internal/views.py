@@ -414,6 +414,22 @@ def activate_shipment(request, pk):
 
     return redirect('internal:shipments')
 
+@login_required
+@permission_or_required('internal.driver_tasks')
+@require_POST  
+def completing_shipment(request, pk):
+    shipment = get_object_or_404(Shipment_ST, pk=pk)
+
+    if shipment.status == 'active':
+        shipment.status = 'done'
+        shipment.vehicle.status='available'
+        shipment.vehicle.address=shipment.route_part.end_address
+        shipment.shipment_end_date=timezone.now().strftime('%Y-%m-%d %H:%M:%S')
+        shipment.save()
+        shipment.vehicle.save()
+        messages.success(request, f"Shipment {shipment.shipment_id} has been completed.")
+
+    return redirect('internal:shipments')
 
 @login_required
 def workschedule_update(request: HttpRequest, pk: int) -> HttpResponse:
@@ -539,27 +555,3 @@ def load_products(request):
         for p in products
     ]
     return JsonResponse({'products': data})
-
-@login_required
-@permission_or_required('internal.driver_tasks')
-def shipment_update(request: HttpRequest, pk: int) -> HttpResponse:
-    shipment = get_object_or_404(Shipment_ST, pk=pk)
-    if request.method == 'POST':
-        form = ShipmentForm(request.POST, instance=shipment)
-        if form.is_valid():
-            instance = form.save(commit=False)
-            instance.save(using='stage')
-            shipment.status = 'done'
-            shipment.vehicle.status='available'
-            shipment.vehicle.address=shipment.route_part.end_address
-            shipment.shipment_end_date=timezone.now().strftime('%Y-%m-%d %H:%M:%S')
-            shipment.save()
-            shipment.vehicle.save()
-            messages.success(request, f"Shipment {shipment.shipment_id} has been completed.")
-            return redirect('internal:shipments')
-        else:
-            messages.error(request, 'Error in completing shipment.')
-            return redirect('internal:shipments')
-    else:
-        form = ShipmentForm(instance=shipment)
-    return render(request, 'internal/shipment_update.html', {'form': form})
