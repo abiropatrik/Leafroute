@@ -15,6 +15,8 @@ from django.contrib.auth.models import User
 from django.db import transaction
 from datetime import datetime
 from zoneinfo import ZoneInfo
+from leafroute.apps.internal.utils import CO2_emission
+
 
 def etl_job():
     """
@@ -190,6 +192,22 @@ def etl_job():
             print("shipment")
             # Extract and Transform: Shipment
             for shipment_st in Shipment_ST.objects.using('stage').all():
+                start_date = (
+                    datetime.strptime(shipment_st.shipment_start_date, "%Y-%m-%d %H:%M:%S").replace(tzinfo=ZoneInfo("Europe/Budapest"))
+                    if shipment_st.shipment_start_date else None
+                )
+                end_date = (
+                    datetime.strptime(shipment_st.shipment_end_date, "%Y-%m-%d %H:%M:%S").replace(tzinfo=ZoneInfo("Europe/Budapest"))
+                    if shipment_st.shipment_end_date else None
+                )
+
+                duration = None
+                if start_date and end_date:
+                    duration = (end_date - start_date).total_seconds() / 3600  # duration in hours
+
+                fuel_consumed=((float(shipment_st.route_part.distance) / 100) * float(shipment_st.vehicle.consumption))
+                print(fuel_consumed)
+
                 shipment, created = Shipment.objects.using('default').update_or_create(
                     shipment_id=shipment_st.shipment_id,
                     defaults={
@@ -197,9 +215,9 @@ def etl_job():
                         'vehicle': Vehicle.objects.using('default').get(vehicle_id=shipment_st.vehicle.vehicle_id),
                         'product': Product.objects.using('default').get(product_id=shipment_st.product.product_id),
                         'route_part': RoutePart.objects.using('default').get(route_part_id=shipment_st.route_part.route_part_id),
-                        'shipment_start_date': datetime.strptime(shipment_st.shipment_start_date, "%Y-%m-%d %H:%M:%S").replace(tzinfo=ZoneInfo("Europe/Budapest")) if shipment_st.shipment_start_date else None,
-                        'shipment_end_date': datetime.strptime(shipment_st.shipment_end_date, "%Y-%m-%d %H:%M:%S").replace(tzinfo=ZoneInfo("Europe/Budapest")) if shipment_st.shipment_end_date else None,
-                        'duration': int(shipment_st.duration) if shipment_st.duration else None,
+                        'shipment_start_date': start_date,
+                        'shipment_end_date': end_date,
+                        'duration': duration,
                         'quantity_transported': int(shipment_st.quantity_transported) if shipment_st.quantity_transported else None,
                         'fuel_consumed': float(shipment_st.fuel_consumed) if shipment_st.fuel_consumed else None,
                         'status': shipment_st.status,
@@ -207,6 +225,7 @@ def etl_job():
                         'transport_cost': float(shipment_st.transport_cost) if shipment_st.transport_cost else None,
                     }
                 )
+
 
             print("user_shipment")
             # Extract and Transform: UserShipment
