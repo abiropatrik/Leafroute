@@ -210,7 +210,7 @@ def new_transport_route(request):
                         status='pending',
                     )
                     UserShipments_ST.objects.using('stage').get_or_create(
-                        user=user.id,
+                        user=user.user_id,
                         shipment=shipment_instance
                     )
 

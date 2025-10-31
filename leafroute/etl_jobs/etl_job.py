@@ -1,5 +1,5 @@
 from leafroute.apps.internal_stage.models import (
-    City_ST, Address_ST, UserProfile_ST, Warehouse_ST, WarehouseConnection_ST,
+    City_ST, Address_ST, Warehouse_ST, WarehouseConnection_ST,
     Route_ST, RoutePart_ST, WorkSchedule_ST, Vehicle_ST, Product_ST,
     WarehouseProduct_ST, Order_ST, Shipment_ST, UserShipments_ST
 )
@@ -11,8 +11,10 @@ from leafroute.apps.internal.models import (
 from leafroute.apps.internal_dm.models import (
     DimOrder, DimVehicle, DimProduct, DimRoute, DimDate, FactShipment
 )
+from django.contrib.auth.models import User
 from django.db import transaction
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 def etl_job():
     """
@@ -47,22 +49,6 @@ def etl_job():
                     }
                 )
 
-            # Extract and Transform: UserProfile
-            for user_profile_st in UserProfile_ST.objects.using('stage').all():
-                user_profile, created = UserProfile.objects.using('default').update_or_create(
-                    user=user_profile_st.user,
-                    defaults={
-                        'email': user_profile_st.email,
-                        'first_name': user_profile_st.first_name,
-                        'last_name': user_profile_st.last_name,
-                        'address': Address.objects.using('default').get(address_id=user_profile_st.address.address_id) if user_profile_st.address else None,
-                        'job': user_profile_st.job,
-                        'rights': user_profile_st.rights,
-                        'hiring_date': user_profile_st.hiring_date,
-                        'co2_saved': float(user_profile_st.co2_saved) if user_profile_st.co2_saved else None,
-                        'salary': float(user_profile_st.salary) if user_profile_st.salary else None,
-                    }
-                )
 
             # Extract and Transform: Warehouse
             for warehouse_st in Warehouse_ST.objects.using('stage').all():
@@ -179,29 +165,29 @@ def etl_job():
                         'reserved_stock': int(warehouse_product_st.reserved_stock) if warehouse_product_st.reserved_stock else None,
                     }
                 )
-
+            print("order")
             # Extract and Transform: Order
             for order_st in Order_ST.objects.using('stage').all():
                 order, created = Order.objects.using('default').update_or_create(
                     order_id=order_st.order_id,
                     defaults={
-                        'user': UserProfile.objects.using('default').get(user_id=order_st.user.user_id),
+                        'user': UserProfile.objects.using('default').get(user_id=order_st.user),
                         'product': Product.objects.using('default').get(product_id=order_st.product.product_id),
                         'warehouse_connection': WarehouseConnection.objects.using('default').get(
                             warehouse_connection_id=order_st.warehouse_connection.warehouse_connection_id
                         ),
                         'route': Route.objects.using('default').get(route_id=order_st.route.route_id),
                         'quantity': int(order_st.quantity) if order_st.quantity else None,
-                        'order_date': order_st.order_date,
-                        'expected_fullfillment_date': order_st.expected_fullfillment_date,
-                        'fulfillment_date': order_st.fulfillment_date,
+                        'order_date': datetime.strptime(order_st.order_date, "%Y-%m-%d %H:%M:%S").replace(tzinfo=ZoneInfo("Europe/Budapest")) if order_st.order_date else None,
+                        'expected_fullfillment_date': datetime.strptime(order_st.expected_fullfillment_date, "%Y-%m-%d %H:%M:%S").replace(tzinfo=ZoneInfo("Europe/Budapest")) if order_st.expected_fullfillment_date else None,
+                        'fulfillment_date': datetime.strptime(order_st.fulfillment_date, "%Y-%m-%d %H:%M:%S").replace(tzinfo=ZoneInfo("Europe/Budapest")) if order_st.fulfillment_date else None,
                         'order_status': order_st.order_status,
                         'expected_co2_emission': float(order_st.expected_co2_emission) if order_st.expected_co2_emission else None,
                         'co2_emmission': float(order_st.co2_emmission) if order_st.co2_emmission else None,
                         'cost': float(order_st.cost) if order_st.cost else None,
                     }
                 )
-
+            print("shipment")
             # Extract and Transform: Shipment
             for shipment_st in Shipment_ST.objects.using('stage').all():
                 shipment, created = Shipment.objects.using('default').update_or_create(
@@ -211,8 +197,8 @@ def etl_job():
                         'vehicle': Vehicle.objects.using('default').get(vehicle_id=shipment_st.vehicle.vehicle_id),
                         'product': Product.objects.using('default').get(product_id=shipment_st.product.product_id),
                         'route_part': RoutePart.objects.using('default').get(route_part_id=shipment_st.route_part.route_part_id),
-                        'shipment_start_date': shipment_st.shipment_start_date,
-                        'shipment_end_date': shipment_st.shipment_end_date,
+                        'shipment_start_date': datetime.strptime(shipment_st.shipment_start_date, "%Y-%m-%d %H:%M:%S").replace(tzinfo=ZoneInfo("Europe/Budapest")) if shipment_st.shipment_start_date else None,
+                        'shipment_end_date': datetime.strptime(shipment_st.shipment_end_date, "%Y-%m-%d %H:%M:%S").replace(tzinfo=ZoneInfo("Europe/Budapest")) if shipment_st.shipment_end_date else None,
                         'duration': int(shipment_st.duration) if shipment_st.duration else None,
                         'quantity_transported': int(shipment_st.quantity_transported) if shipment_st.quantity_transported else None,
                         'fuel_consumed': float(shipment_st.fuel_consumed) if shipment_st.fuel_consumed else None,
@@ -222,10 +208,11 @@ def etl_job():
                     }
                 )
 
+            print("user_shipment")
             # Extract and Transform: UserShipment
             for user_shipment_st in UserShipments_ST.objects.using('stage').all():
                 user_shipment, created = UserShipment.objects.using('default').update_or_create(
-                    user=UserProfile.objects.using('default').get(user_id=user_shipment_st.user.user_id),
+                    user=UserProfile.objects.using('default').get(user_id=user_shipment_st.user),
                     shipment=Shipment.objects.using('default').get(shipment_id=user_shipment_st.shipment.shipment_id),
                 )
 
