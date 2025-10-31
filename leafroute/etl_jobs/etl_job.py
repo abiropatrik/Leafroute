@@ -11,11 +11,13 @@ from leafroute.apps.internal.models import (
 from leafroute.apps.internal_dm.models import (
     DimOrder, DimVehicle, DimProduct, DimRoute, DimDate, FactShipment
 )
-from django.contrib.auth.models import User
+from django.db.models import Sum, FloatField
+from django.db.models.functions import Cast
 from django.db import transaction
 from datetime import datetime
 from zoneinfo import ZoneInfo
-from leafroute.apps.internal.utils import CO2_emission
+from leafroute.apps.internal.utils import real_CO2_emission
+import math
 
 
 def etl_job():
@@ -167,28 +169,7 @@ def etl_job():
                         'reserved_stock': int(warehouse_product_st.reserved_stock) if warehouse_product_st.reserved_stock else None,
                     }
                 )
-            print("order")
-            # Extract and Transform: Order
-            for order_st in Order_ST.objects.using('stage').all():
-                order, created = Order.objects.using('default').update_or_create(
-                    order_id=order_st.order_id,
-                    defaults={
-                        'user': UserProfile.objects.using('default').get(user_id=order_st.user),
-                        'product': Product.objects.using('default').get(product_id=order_st.product.product_id),
-                        'warehouse_connection': WarehouseConnection.objects.using('default').get(
-                            warehouse_connection_id=order_st.warehouse_connection.warehouse_connection_id
-                        ),
-                        'route': Route.objects.using('default').get(route_id=order_st.route.route_id),
-                        'quantity': int(order_st.quantity) if order_st.quantity else None,
-                        'order_date': datetime.strptime(order_st.order_date, "%Y-%m-%d %H:%M:%S").replace(tzinfo=ZoneInfo("Europe/Budapest")) if order_st.order_date else None,
-                        'expected_fullfillment_date': datetime.strptime(order_st.expected_fullfillment_date, "%Y-%m-%d %H:%M:%S").replace(tzinfo=ZoneInfo("Europe/Budapest")) if order_st.expected_fullfillment_date else None,
-                        'fulfillment_date': datetime.strptime(order_st.fulfillment_date, "%Y-%m-%d %H:%M:%S").replace(tzinfo=ZoneInfo("Europe/Budapest")) if order_st.fulfillment_date else None,
-                        'order_status': order_st.order_status,
-                        'expected_co2_emission': float(order_st.expected_co2_emission) if order_st.expected_co2_emission else None,
-                        'co2_emmission': float(order_st.co2_emmission) if order_st.co2_emmission else None,
-                        'cost': float(order_st.cost) if order_st.cost else None,
-                    }
-                )
+            
             print("shipment")
             # Extract and Transform: Shipment
             for shipment_st in Shipment_ST.objects.using('stage').all():
@@ -201,12 +182,22 @@ def etl_job():
                     if shipment_st.shipment_end_date else None
                 )
 
-                duration = None
+                duration = 0
                 if start_date and end_date:
-                    duration = (end_date - start_date).total_seconds() / 3600  # duration in hours
+                    duration = math.ceil((end_date - start_date).total_seconds() / 3600)  # duration in hours
 
                 fuel_consumed=((float(shipment_st.route_part.distance) / 100) * float(shipment_st.vehicle.consumption))
-                print(fuel_consumed)
+                co2emission=real_CO2_emission(fuel_consumed, shipment_st.vehicle.fuel_type)
+
+                this_user_id = (
+                    UserShipments_ST.objects.using('stage')
+                    .filter(shipment=shipment_st)
+                    .values_list('user', flat=True)
+                    .first()
+                )
+                user_st_object = UserProfile.objects.using('default').get(user=this_user_id)
+                user_salary = float(user_st_object.salary or 0)
+                transportcost= float(shipment_st.vehicle.consumption or 0) * (float(shipment_st.route_part.distance or 0) / 100) * float(shipment_st.vehicle.fuel_cost or 0) + duration * user_salary
 
                 shipment, created = Shipment.objects.using('default').update_or_create(
                     shipment_id=shipment_st.shipment_id,
@@ -219,13 +210,75 @@ def etl_job():
                         'shipment_end_date': end_date,
                         'duration': duration,
                         'quantity_transported': int(shipment_st.quantity_transported) if shipment_st.quantity_transported else None,
-                        'fuel_consumed': float(shipment_st.fuel_consumed) if shipment_st.fuel_consumed else None,
+                        'fuel_consumed': fuel_consumed,
                         'status': shipment_st.status,
-                        'co2_emission': float(shipment_st.co2_emission) if shipment_st.co2_emission else None,
-                        'transport_cost': float(shipment_st.transport_cost) if shipment_st.transport_cost else None,
+                        'co2_emission': co2emission,
+                        'transport_cost': transportcost,
                     }
                 )
 
+            print("order")
+            # Extract and Transform: Order
+            for order_st in Order_ST.objects.using('stage').all():
+                first_pending = (
+                    Shipment_ST.objects.using('stage')
+                    .filter(order=order_st)
+                    .order_by('shipment_id')
+                    .values_list('status', flat=True)
+                    .first()
+                )
+                last_shipment_date = (
+                    Shipment_ST.objects.using('stage')
+                    .filter(order=order_st)
+                    .order_by('-shipment_id')
+                    .values_list('shipment_end_date', flat=True)
+                    .first()
+                )
+                last_shipment_date=(
+                    datetime.strptime(last_shipment_date, "%Y-%m-%d %H:%M:%S").replace(tzinfo=ZoneInfo("Europe/Budapest"))
+                    if last_shipment_date else None
+                )
+                order_status ="pending"
+                if first_pending != "pending" and last_shipment_date is None:
+                    order_status="In progress"
+                elif first_pending != "pending" and last_shipment_date is not None:
+                    order_status="Completed"
+
+                co_2_data = (
+                    Shipment.objects.using('default')
+                    .filter(order=order_st.order_id)
+                    .aggregate(total_co2=Sum('co2_emission'))
+                )
+                co_2_emission = co_2_data['total_co2'] or 0.0
+
+                cost_data = (
+                    Shipment.objects.using('default')
+                    .filter(order=order_st.order_id)
+                    .aggregate(total_cost=Sum('transport_cost'))
+                )
+                transport_cost = cost_data['total_cost'] or 0.0
+
+                print(transport_cost)
+
+                order, created = Order.objects.using('default').update_or_create(
+                    order_id=order_st.order_id,
+                    defaults={
+                        'user': UserProfile.objects.using('default').get(user_id=order_st.user),
+                        'product': Product.objects.using('default').get(product_id=order_st.product.product_id),
+                        'warehouse_connection': WarehouseConnection.objects.using('default').get(
+                            warehouse_connection_id=order_st.warehouse_connection.warehouse_connection_id
+                        ),
+                        'route': Route.objects.using('default').get(route_id=order_st.route.route_id),
+                        'quantity': int(order_st.quantity) if order_st.quantity else None,
+                        'order_date': datetime.strptime(order_st.order_date, "%Y-%m-%d %H:%M:%S").replace(tzinfo=ZoneInfo("Europe/Budapest")) if order_st.order_date else None,
+                        'expected_fullfillment_date': datetime.strptime(order_st.expected_fullfillment_date, "%Y-%m-%d %H:%M:%S").replace(tzinfo=ZoneInfo("Europe/Budapest")) if order_st.expected_fullfillment_date else None,
+                        'fulfillment_date': last_shipment_date,
+                        'order_status': order_status,
+                        'expected_co2_emission': float(order_st.expected_co2_emission) if order_st.expected_co2_emission else None,
+                        'co2_emmission': co_2_emission,
+                        'cost': transport_cost,
+                    }
+                )
 
             print("user_shipment")
             # Extract and Transform: UserShipment

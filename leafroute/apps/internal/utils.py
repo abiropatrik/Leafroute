@@ -13,6 +13,19 @@ def CO2_emission(distance: float, consumption: float, fuel_type: str) -> float:
     }
     return ((distance / 100) * consumption) * emission_factors.get(fuel_type.lower(), 0)
 
+def real_CO2_emission(fuelconsumed: float, fuel_type: str) -> float:
+    emission_factors = {
+        'diesel': 2.717,
+        'gasoline': 2.308,
+        'kerosene': 2.588,
+        'jet_kerosene': 2.582,
+        'fuel_oil': 2.884,
+        'propane': 0.509,
+        'butane': 0.758,
+        'electricity': 0.0,
+    }
+    return fuelconsumed * emission_factors.get(fuel_type.lower(), 0)
+
 
 def vehicle_chooser(routepart: RoutePart):
     transport_mode = routepart.transport_mode
