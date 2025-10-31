@@ -55,7 +55,7 @@ class DimRoute(models.Model):
 
 
 class DimDate(models.Model):
-    dateid = models.AutoField(primary_key=True)
+    dateid = models.IntegerField(primary_key=True, db_column="DateID")
     year = models.IntegerField(null=True, blank=True)
     month = models.IntegerField(null=True, blank=True)
     monthname = models.CharField(max_length=20,null=True, blank=True)
@@ -72,9 +72,7 @@ class DimDate(models.Model):
 
 class FactShipment(models.Model):
     shipmentid = models.AutoField(primary_key=True)
-    shipmentstartdate = models.DateField(null=True, blank=True)
-    shipmentenddate = models.DateField(null=True, blank=True)
-    duration = models.DateTimeField(null=True, blank=True)
+    duration = models.IntegerField(null=True, blank=True)
     quantitytransported = models.IntegerField(null=True, blank=True)
     fuelconsumed = models.IntegerField(null=True, blank=True)
     co2emission = models.FloatField(null=True, blank=True)
@@ -90,7 +88,12 @@ class FactShipment(models.Model):
     productid = models.ForeignKey(DimProduct, on_delete=models.CASCADE, db_column="ProductID")
     routeid = models.ForeignKey(DimRoute, on_delete=models.CASCADE, db_column="RouteID")
     vehicleid = models.ForeignKey(DimVehicle, on_delete=models.CASCADE, db_column="VehicleID")
-    dateid = models.ForeignKey(DimDate, on_delete=models.CASCADE, db_column="DateID")
+    shipmentstartdate = models.ForeignKey('DimDate', on_delete=models.PROTECT, 
+                                       related_name='shipments_started', 
+                                       db_column="SHIPMENTSTARTDATE")
+    shipmentenddate = models.ForeignKey('DimDate', on_delete=models.PROTECT, 
+                                     related_name='shipments_ended', 
+                                     db_column="SHIPMENTENDDATE")
 
     def __str__(self):
         return f"Shipment {self.shipmentid} ({self.shipmentstartdate} → {self.shipmentenddate})"

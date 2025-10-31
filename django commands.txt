@@ -16,6 +16,7 @@ new app creation: python manage.py startapp internal
 
 nem default database-re migrálás:
  make compose-manage-py cmd="migrate --database=stage --run-syncdb"
+-->make compose-manage-py cmd="migrate internal_stage --database=stage"
 
 ezeket használtam az init.sqlhez:
     docker-compose down

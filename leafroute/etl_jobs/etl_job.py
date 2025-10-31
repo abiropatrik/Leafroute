@@ -11,10 +11,10 @@ from leafroute.apps.internal.models import (
 from leafroute.apps.internal_dm.models import (
     DimOrder, DimVehicle, DimProduct, DimRoute, DimDate, FactShipment
 )
-from django.db.models import Sum, FloatField
+from django.db.models import Sum, FloatField,ObjectDoesNotExist
 from django.db.models.functions import Cast
 from django.db import transaction
-from datetime import datetime
+from datetime import datetime,date
 from zoneinfo import ZoneInfo
 from leafroute.apps.internal.utils import real_CO2_emission
 import math
@@ -301,6 +301,7 @@ def dm_etl_job():
     try:
         with transaction.atomic():
             # DimOrder
+            print("order")
             for order in Order.objects.using('default').all():
                 DimOrder.objects.using('dm').update_or_create(
                     orderid=order.order_id,
@@ -311,7 +312,7 @@ def dm_etl_job():
                         'useremail': order.user.email if order.user else None,
                     }
                 )
-
+            print("vehicle")
             # DimVehicle
             for vehicle in Vehicle.objects.using('default').all():
                 DimVehicle.objects.using('dm').update_or_create(
@@ -323,7 +324,7 @@ def dm_etl_job():
                         'fueltype': vehicle.fuel_type,
                     }
                 )
-
+            print("product")
             # DimProduct
             for product in Product.objects.using('default').all():
                 DimProduct.objects.using('dm').update_or_create(
@@ -334,7 +335,7 @@ def dm_etl_job():
                         'size': int(product.size) if product.size else None,
                     }
                 )
-
+            print("route")
             # DimRoute
             for route in Route.objects.using('default').all():
                 start_city = route.warehouse_connection.warehouse1.address.city.name if route.warehouse_connection.warehouse1.address.city else None
@@ -347,29 +348,16 @@ def dm_etl_job():
                     }
                 )
 
-            # DimDate
-            for shipment in Shipment.objects.using('default').all():
-                if shipment.shipment_start_date:
-                    start_date = shipment.shipment_start_date
-                    DimDate.objects.using('dm').update_or_create(
-                        dateid=shipment.shipment_id,  # Using shipment_id as a unique identifier for dates
-                        defaults={
-                            'year': start_date.year,
-                            'month': start_date.month,
-                            'monthname': start_date.strftime('%B'),
-                            'day': start_date.day,
-                            'dayname': start_date.strftime('%A'),
-                            'hour': start_date.hour,
-                        }
-                    )
-
+            print("FactShipment")
             # FactShipment
             for shipment in Shipment.objects.using('default').all():
+                shipmentstartdate=get_dim_date_object(shipment.shipment_start_date)
+                shipmentenddate=get_dim_date_object(shipment.shipment_end_date)
                 FactShipment.objects.using('dm').update_or_create(
                     shipmentid=shipment.shipment_id,
                     defaults={
-                        'shipmentstartdate': shipment.shipment_start_date,
-                        'shipmentenddate': shipment.shipment_end_date,
+                        'shipmentstartdate': shipmentstartdate,
+                        'shipmentenddate': shipmentenddate,
                         'duration': shipment.duration,
                         'quantitytransported': shipment.quantity_transported,
                         'fuelconsumed': shipment.fuel_consumed,
@@ -385,7 +373,6 @@ def dm_etl_job():
                         'productid': DimProduct.objects.using('dm').get(productid=shipment.product.product_id) if shipment.product else None,
                         'routeid': DimRoute.objects.using('dm').get(routeid=shipment.route_part.route.route_id) if shipment.route_part and shipment.route_part.route else None,
                         'vehicleid': DimVehicle.objects.using('dm').get(vehicleid=shipment.vehicle.vehicle_id) if shipment.vehicle else None,
-                        'dateid': DimDate.objects.using('dm').get(dateid=shipment.shipment_id) if shipment.shipment_start_date else None,
                     }
                 )
 
@@ -393,3 +380,14 @@ def dm_etl_job():
 
     except Exception as e:
         print(f"DM ETL job failed: {e}")
+
+
+def get_dim_date_object(raw_datetime: datetime) -> 'DimDate':
+    if raw_datetime is None:
+        return DimDate.objects.get(dateid=-1)
+    else:
+        date_key = int(raw_datetime.strftime('%Y%m%d%H'))
+        try:
+            return DimDate.objects.get(dateid=date_key)
+        except ObjectDoesNotExist:
+            raise Exception(f"Missing dimdate: {date_key}. Please contact administrator.")
