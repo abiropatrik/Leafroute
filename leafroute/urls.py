@@ -24,4 +24,5 @@ urlpatterns = [
     path("",include('leafroute.apps.public.urls' )),
     path('accounts/',include('leafroute.apps.accounts.urls')),
     path('internal/',include('leafroute.apps.internal.urls')),
+    path('analytics/', include('leafroute.apps.internal_dm.urls')),
 ]

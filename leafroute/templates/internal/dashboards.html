@@ -1,9 +1,17 @@
-{% extends 'base.html' %}
+{% extends 'base.html' %} {% block head %}
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+{% endblock %}
 
-{% block title %}Kimutatások{% endblock %}
 
 {% block content %}
-<h1>
-    Kimutatások
-</h1>
-{% endblock %}
+  <h1>LeafRoute Dashboardok</h1>
+  <p>A vállalat teljesítményének elemzése.</p>
+
+  <hr>
+
+  <div class="chart-container">
+    <h2>Megrendelők CO2 kibocsátása</h2>
+    {{ chart_customer|safe }}
+  </div>
+
+  {% endblock %}
