@@ -293,47 +293,15 @@ class OrderForm(forms.ModelForm):
 
         return cleaned_data
 
+
 class ShipmentForm(forms.ModelForm):
     class Meta:
         model = Shipment_ST
-        fields = ['order', 'vehicle', 'product', 'route_part','shipment_start_date', 'shipment_end_date', 'duration','quantity_transported', 'fuel_consumed', 'status','co2_emission', 'transport_cost']
-        labels = {
-            'order': 'Megrendelés',
-            'vehicle': 'Jármű',
-            'product': 'Termék',
-            'route_part': 'Útszakasz',
-            'shipment_start_date': 'Szállítás kezdete',
-            'shipment_end_date': 'Szállítás vége',
-            'duration': 'Időtartam',
-            'quantity_transported': 'Szállított mennyiség',
-            'fuel_consumed': 'Felhasznált üzemanyag',
-            'status': 'Állapot',
-            'co2_emission': 'CO2 kibocsátás',
-            'transport_cost': 'Szállítási költség',
-        }
-
+        fields = ['fuel_consumed']
+    
     def __init__(self, *args, **kwargs):
-        fields = kwargs.pop('fields', None)
         super().__init__(*args, **kwargs)
-        fields = kwargs.pop('fields', None)
-        super().__init__(*args, **kwargs)
-        if fields:
-            allowed = set(fields)
-            for field_name in list(self.fields):
-                if field_name not in allowed:
-                    self.fields.pop(field_name)
-
-        if 'shipment_start_date' in self.fields:
-            self.fields['shipment_start_date'].widget = forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD'})
-        if 'shipment_end_date' in self.fields:
-            self.fields['shipment_end_date'].widget = forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'YYYY-MM-DD'})
-        if 'duration' in self.fields:
-            self.fields['duration'].widget = forms.TextInput(attrs={'class': 'form-control'})
-        if 'quantity_transported' in self.fields:
-            self.fields['quantity_transported'].widget = forms.NumberInput(attrs={'class': 'form-control'})
         if 'fuel_consumed' in self.fields:
-            self.fields['fuel_consumed'].widget = forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'})
-        if 'co2_emission' in self.fields:
-            self.fields['co2_emission'].widget = forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'})
-        if 'transport_cost' in self.fields:
-            self.fields['transport_cost'].widget = forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'})
+            self.fields['fuel_consumed'].widget = forms.NumberInput(
+                attrs={'class': 'form-control', 'step': '0.01'}
+            )

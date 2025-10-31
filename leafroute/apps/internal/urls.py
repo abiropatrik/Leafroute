@@ -21,5 +21,5 @@ urlpatterns = [
     path('internal/new_transport_route', views.new_transport_route, name="new_transport_route"),
     path('internal/ajax/route-parts/', views.ajax_route_parts, name='ajax_route_parts'),
     path('internal/shipment/activate/<int:pk>/', views.activate_shipment, name='activate_shipment'),
-    path('internal/shipment/completing/<int:pk>/', views.completing_shipment, name='completing_shipment'),
+    path('internal/shipment/update/<int:pk>/', views.shipment_update, name="shipment_update"),
 ]

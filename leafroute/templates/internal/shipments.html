@@ -50,10 +50,7 @@
                                     <button type="submit" class="btn btn-primary btn-sm">Fuvar megkezdése</button>
                                 </form>
                             {% else %}
-                                <form action="{% url 'internal:completing_shipment' shipment.pk %}" method="POST" style="display: inline;">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-primary btn-sm">Fuvar befejezése</button>
-                                </form>
+                                <a href="{% url 'internal:shipment_update' shipment.pk %}" class="btn btn-primary btn-sm">Befejezés</a>
                             {% endif %}
                         </td>
                     </tr>
