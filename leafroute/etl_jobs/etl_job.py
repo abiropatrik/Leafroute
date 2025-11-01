@@ -18,12 +18,14 @@ from datetime import datetime,date
 from zoneinfo import ZoneInfo
 from leafroute.apps.internal.utils import real_CO2_emission
 import math
-
+import googlemaps
+from django.conf import settings
 
 def etl_job():
     """
     ETL job to transfer data from internal_stage models to internal models.
     """
+    gmaps = googlemaps.Client(key=settings.GOOGLE_MAPS_API_KEY)
     try:
         with transaction.atomic():
             # Extract and Transform: City
@@ -90,19 +92,78 @@ def etl_job():
                 )
 
             # Extract and Transform: RoutePart
+            api_cache = {}
             for route_part_st in RoutePart_ST.objects.using('stage').all():
+                
+                
+                start_address_obj = Address.objects.using('default').get(
+                    address_id=route_part_st.start_address.address_id
+                )
+                end_address_obj = Address.objects.using('default').get(
+                    address_id=route_part_st.end_address.address_id
+                )
+                route_obj = Route.objects.using('default').get(
+                    route_id=route_part_st.route.route_id
+                )
+            
+                cache_key = (
+                    start_address_obj.address_id, 
+                    end_address_obj.address_id, 
+                    route_part_st.transport_mode
+                )
+
+                distance_km = float(route_part_st.distance) if route_part_st.distance else None
+
+                if distance_km is None and route_part_st.transport_mode == 'road':
+                    if cache_key in api_cache:
+                        print(f"Using in-memory cache for RoutePart {route_part_st.route_part_id}...")
+                        distance_km = api_cache[cache_key]
+                    
+                    else:
+                        print(f"Checking DB cache for {cache_key}...")
+                        cached_part = RoutePart.objects.using('default').filter(
+                            start_address=start_address_obj,
+                            end_address=end_address_obj,
+                            transport_mode=route_part_st.transport_mode,
+                            distance__isnull=False
+                        ).first()
+
+                        if cached_part:
+                            print("Found in DB cache.")
+                            distance_km = cached_part.distance
+                            
+                            api_cache[cache_key] = distance_km
+                        
+                        else:
+                            print(f"No cache. Calling Google API for RoutePart {route_part_st.route_part_id}...")
+                            origin_str = _format_address_from_obj(start_address_obj)
+                            dest_str = _format_address_from_obj(end_address_obj)
+
+                            try:
+                                directions_result = gmaps.directions(origin_str, dest_str, mode="driving")
+                                if directions_result:
+                                    distance_meters = directions_result[0]['legs'][0]['distance']['value']
+                                    distance_km = round(distance_meters / 1000.0, 2)
+                                
+                                api_cache[cache_key] = distance_km
+                                print(f"API success: Dist: {distance_km}km")
+
+                            except Exception as e:
+                                print(f"Error calling Google API: {e}")
+                                api_cache[cache_key] = None
+
+                    print(f"Updating stage table for RoutePart {route_part_st.route_part_id} with new distance...")
+                    route_part_st.distance = distance_km
+                    route_part_st.save(using='stage')
+
                 route_part, created = RoutePart.objects.using('default').update_or_create(
                     route_part_id=route_part_st.route_part_id,
                     defaults={
-                        'route': Route.objects.using('default').get(route_id=route_part_st.route.route_id),
-                        'distance': float(route_part_st.distance) if route_part_st.distance else None,
+                        'route': route_obj,
+                        'distance': distance_km,
                         'transport_mode': route_part_st.transport_mode,
-                        'start_address': Address.objects.using('default').get(
-                            address_id=route_part_st.start_address.address_id
-                        ),
-                        'end_address': Address.objects.using('default').get(
-                            address_id=route_part_st.end_address.address_id
-                        ),
+                        'start_address': start_address_obj,
+                        'end_address': end_address_obj,
                         'route_cost': float(route_part_st.route_cost) if route_part_st.route_cost else None,
                     }
                 )
@@ -381,6 +442,8 @@ def dm_etl_job():
     except Exception as e:
         print(f"DM ETL job failed: {e}")
 
+def _format_address_from_obj(address_obj):
+    return f"{address_obj.street} {address_obj.house_number}, {address_obj.city.name}, {address_obj.city.country}"
 
 def get_dim_date_object(raw_datetime: datetime) -> 'DimDate':
     if raw_datetime is None:
