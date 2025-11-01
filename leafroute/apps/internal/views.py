@@ -384,10 +384,6 @@ def warehouse_settings(request: HttpRequest) -> HttpResponse:
         cities= City_ST.objects.using('stage')
         return render(request, 'internal/warehouse_settings.html', {'warehouse_form': warehouse_form, 'warehouses': warehouses, 'address_form': address_form, 'addresses': addresses, 'city_form': city_form, 'cities': cities})
 
-@login_required
-@permission_or_required('internal.organiser_tasks','internal.manager_tasks')
-def dashboards(request: HttpRequest) -> HttpResponse:
-    return render(request,'internal/dashboards.html')
 
 @login_required
 @permission_or_required('internal.driver_tasks')

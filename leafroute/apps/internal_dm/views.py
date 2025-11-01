@@ -1,38 +1,32 @@
 import plotly.express as px
 import pandas as pd
 from django.shortcuts import render
-from django.db.models import Sum
+from django.db.models import Sum, Value
+from django.db.models.functions import Coalesce
+from django.contrib.auth.decorators import login_required
+
+from leafroute.apps.internal.views import permission_or_required 
 
 # Importáld a modelledet (feltételezve, hogy a neve Factshipment és Dimorder)
 from .models import FactShipment, DimOrder 
 
-def dashboards_page(request):
+@login_required
+@permission_or_required('internal.organiser_tasks','internal.manager_tasks')
+def dashboards(request):
     
     # --- Példa: 7. pont (CO2 Megrendelőnként)  ---
 
     # 1. Adatlekérdezés (ORM)
-    # Hatékony lekérdezés: Csak a szükséges mezőket kérjük le
-    # és az adatbázissal végeztetjük az aggregálást (Sum).
     customer_co2_data = FactShipment.objects.values(
-        'orderid__userfirstname', # DIMORDER kapcsolat [cite: 585, 597]
-        'orderid__userlastname'   # DIMORDER kapcsolat [cite: 585, 601]
+        'orderid__userfirstname', # 
+        'orderid__userlastname'   # 
     ).annotate(
-        total_co2=Sum('co2emission') # FACTSHIPMENT mező [cite: 607]
-    ).order_by('-total_co2') # Sorba rendezve
-
-    # 1. Adatlekérdezés (ORM)
-    # Hatékony lekérdezés: Csak a szükséges mezőket kérjük le 
-    # és az adatbázissal végeztetjük az aggregálást (Sum).
-    customer_co2_data = FactShipment.objects.values(
-        'orderid__userfirstname', # DIMORDER kapcsolat [cite: 585, 597]
-        'orderid__userlastname'   # DIMORDER kapcsolat [cite: 585, 601]
-    ).annotate(
-        total_co2=Sum('co2emission') # FACTSHIPMENT mező [cite: 607]
-    ).order_by('-total_co2') # Sorba rendezve
+        total_co2=Coalesce(Sum('co2emission'), Value(0.0)) # 
+    ).order_by('-total_co2') # Sorba rendezvee
 
     # 2. Adatfeldolgozás (Pandas)
     df_customer_co2 = pd.DataFrame(list(customer_co2_data))
-    
+
     # Szebb nevek létrehozása a grafikonhoz
     if not df_customer_co2.empty:
         df_customer_co2['customer_name'] = df_customer_co2['orderid__userfirstname'] + ' ' + df_customer_co2['orderid__userlastname']
@@ -43,10 +37,10 @@ def dashboards_page(request):
 
     # 3. Ábra generálás (Plotly Express)
     fig_customer = px.bar(
-        df_customer_co2.head(15), # Csak a top 15-öt mutatjuk
+        df_customer_co2.head(3), # Csak a top 3-at mutatjuk
         x='customer_name',
         y='total_co2',
-        title='Top 15 Megrendelő CO2 Kibocsátás Alapján',
+        title='Top 3 Megrendelő CO2 Kibocsátás Alapján',
         labels={'customer_name': 'Megrendelő', 'total_co2': 'Összes CO2 (kg)'}
     )
 
@@ -69,4 +63,4 @@ def dashboards_page(request):
         # 'chart_age_fuel': chart_age_fuel_div,
     }
 
-    return render(request, 'yourapp/dashboards.html', context)
+    return render(request, 'internal_dm/dashboards.html', context)

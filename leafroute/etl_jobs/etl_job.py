@@ -240,9 +240,9 @@ def etl_job():
                 )
                 order_status ="pending"
                 if first_pending != "pending" and last_shipment_date is None:
-                    order_status="In progress"
+                    order_status="in_progress"
                 elif first_pending != "pending" and last_shipment_date is not None:
-                    order_status="Completed"
+                    order_status="completed"
 
                 co_2_data = (
                     Shipment.objects.using('default')

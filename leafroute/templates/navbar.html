@@ -45,7 +45,7 @@
         <a href="{% url 'internal:vehicle_settings' %}" class="nav-link {% if request.resolver_match.url_name == 'vehicle_settings' %}active-link{% endif %}">Járművek kezelése</a>
         <a href="{% url 'internal:warehouse_settings' %}" class="nav-link {% if request.resolver_match.url_name == 'warehouse_settings' %}active-link{% endif %}">Raktárok kezelése</a>
         <a href="{% url 'internal:new_route' %}" class="nav-link {% if request.resolver_match.url_name == 'new_route' %}active-link{% endif %}">Új útvonal felvétele</a>
-        <a href="{% url 'internal:dashboards' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboards' %}active-link{% endif %}">Kimutatások</a>    
+        <a href="{% url 'internal_dm:dashboards' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboards' %}active-link{% endif %}">Kimutatások</a>    
     {% elif perms.internal.driver_tasks %}
         <a href="{% url 'internal:vehicle_settings' %}" class="nav-link {% if request.resolver_match.url_name == 'vehicle_settings' %}active-link{% endif %}">Járművek kezelése</a>
         <a href="{% url 'internal:shipments' %}" class="nav-link {% if request.resolver_match.url_name == 'shipments' %}active-link{% endif %}">Fuvar nyilvántartása</a>
@@ -53,7 +53,7 @@
         <a href="{% url 'internal:vehicle_settings' %}" class="nav-link {% if request.resolver_match.url_name == 'vehicle_settings' %}active-link{% endif %}">Járművek kezelése</a>
         <a href="{% url 'internal:warehouse_settings' %}" class="nav-link {% if request.resolver_match.url_name == 'warehouse_settings' %}active-link{% endif %}">Raktárok kezelése</a>        
     {% elif perms.internal.manager_tasks %}
-        <a href="{% url 'internal:dashboards' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboards' %}active-link{% endif %}">Kimutatások</a>    
+        <a href="{% url 'internal_dm:dashboards' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboards' %}active-link{% endif %}">Kimutatások</a>    
     {% endif %}
 </div>
 

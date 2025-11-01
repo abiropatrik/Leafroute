@@ -4,6 +4,7 @@
     {% load static %}
     <meta charset="utf-8">
     <title>{% block title %} Leaf Route {% endblock %}</title>
+    {% block head %}{% endblock %}
     {% block extra_css %}{% endblock %}
     <link rel="stylesheet" href="{% static 'theme/css/navbar-auth.css' %}?v=3">
     <link rel="icon" type="image/png" href="{% static 'theme/img/favicon.png' %}">
