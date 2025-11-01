@@ -1,4 +1,4 @@
-from leafroute.apps.internal.models import Vehicle, UserProfile, RoutePart
+from leafroute.apps.internal.models import Vehicle, UserProfile, RoutePart, Product
 
 def CO2_emission(distance: float, consumption: float, fuel_type: str) -> float:
     emission_factors = {
@@ -27,7 +27,7 @@ def real_CO2_emission(fuelconsumed: float, fuel_type: str) -> float:
     return fuelconsumed * emission_factors.get(fuel_type.lower(), 0)
 
 
-def vehicle_chooser(routepart: RoutePart):
+def vehicle_chooser(routepart: RoutePart,product_id, quantity):
     transport_mode = routepart.transport_mode
 
     if transport_mode == 'road':
@@ -41,10 +41,14 @@ def vehicle_chooser(routepart: RoutePart):
     else:
         vehicletype = []
 
+    product = Product.objects.using('default').get(product_id=product_id)
+    shipmentccm = product.size * quantity
+
     vehicles = Vehicle.objects.using('default').filter(
         address_id=routepart.start_address.address_id,
         type__in=vehicletype,
-        status='available'
+        status='available',
+        free_capacity__gte=shipmentccm
     )
 
     def emission_for(vehicle):
@@ -84,8 +88,8 @@ def user_chooser(routepart: RoutePart):
     return min(users, key=lambda u: u.co2_saved, default=None)
 
 
-def tempshipment(routepart: RoutePart):
-    vehicle, emission = vehicle_chooser(routepart)
+def tempshipment(routepart: RoutePart, product_id, quantity: int):
+    vehicle, emission = vehicle_chooser(routepart,product_id, quantity)
     user = user_chooser(routepart)
     if not vehicle or not user:
         return None, 0.0, None, 0.0, 0.0

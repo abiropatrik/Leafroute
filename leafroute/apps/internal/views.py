@@ -1,3 +1,4 @@
+from urllib import request
 from django.utils import timezone
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse,HttpRequest,HttpResponseForbidden,JsonResponse,HttpResponseBadRequest
@@ -6,6 +7,7 @@ from functools import wraps
 from django.core.exceptions import PermissionDenied
 import csv
 from django.contrib import messages
+from leafroute.apps.internal.models import UserProfile
 from leafroute.apps.internal_stage.models import Shipment_ST,RoutePart_ST,Order_ST,Product_ST,Route_ST, WarehouseConnection_ST, WorkSchedule_ST,Vehicle_ST,Warehouse_ST,Address_ST,City_ST,UserShipments_ST
 from leafroute.apps.internal.forms import OrderForm,RouteForm, WarehouseConnectionForm, WorkScheduleForm,VehicleForm,WarehouseForm,AddressForm,CityForm,ShipmentForm
 from leafroute.apps.internal.utils import tempshipment
@@ -120,6 +122,9 @@ def vehicle_settings(request: HttpRequest) -> HttpResponse:
             shipments = Shipment_ST.objects.using('stage').filter(shipment_id__in=shipment_ids)
             vehicle_ids = shipments.values_list('vehicle_id', flat=True).distinct()
             vehicles = Vehicle_ST.objects.using('stage').filter(pk__in=vehicle_ids)
+        elif request.user.has_perm('internal.warehouseman_tasks'):
+            currentlocation=UserProfile.objects.using('default').get(pk=request.user.id).address.address_id
+            vehicles = Vehicle_ST.objects.using('stage').filter(address=currentlocation)
 
         return render(request, 'internal/vehicle_settings.html', {'form': form, 'vehicles': vehicles})
 
@@ -156,6 +161,9 @@ def new_transport_route(request):
     if not transport_data:
         messages.error(request, 'No transport data found. Please start again.')
         return redirect('internal:new_transport')
+
+    related_product = Product_ST.objects.using('stage').get(product_id=transport_data['product']) 
+    quantity = int(transport_data['quantity'])
 
     routes = Route_ST.objects.using('stage').filter(
         warehouse_connection_id=transport_data['warehouse_connection']
@@ -200,11 +208,12 @@ def new_transport_route(request):
                 route_parts = RoutePart_ST.objects.using('stage').filter(route=selected_route)
 
                 for part in route_parts:
-                    vehicle, emission, user, duration, cost = tempshipment(part)
+                    vehicle, emission, user, duration, cost = tempshipment(part,related_product.product_id,quantity)
 
+                    vehicle_object=Vehicle_ST.objects.using('stage').get(pk=vehicle.vehicle_id)
                     shipment_instance=Shipment_ST.objects.using('stage').create(
                         order=order_instance,
-                        vehicle=Vehicle_ST.objects.using('stage').get(pk=vehicle.vehicle_id),
+                        vehicle=vehicle_object,
                         product_id=transport_data['product'],
                         route_part=part,
                         status='pending',
@@ -213,6 +222,8 @@ def new_transport_route(request):
                         user=user.user_id,
                         shipment=shipment_instance
                     )
+                    vehicle_object.status='loading'
+                    vehicle_object.save(using='stage')
 
 
             except Exception as e:
@@ -237,16 +248,20 @@ def new_transport_route(request):
         parts = RoutePart_ST.objects.using('stage').filter(route=route)
         total_emission = total_duration = total_cost = 0.0
         used_vehicles = []
+        route_is_viable = True
 
         for part in parts:
-            vehicle, emission, user, duration, cost = tempshipment(part)
+            vehicle, emission, user, duration, cost = tempshipment(part,related_product.product_id,quantity)
+            if not vehicle or not user: 
+                route_is_viable = False
+                break
             used_vehicles.append(vehicle.type if vehicle else 'N/A')
             total_emission += emission or 0.0
             total_duration += duration or 0.0
             total_cost += cost or 0.0
 
-        used_vehicles_str = " -> ".join(used_vehicles)
-        if vehicle is not None and user is not None:
+        if route_is_viable:
+            used_vehicles_str = " -> ".join(used_vehicles)
             routes_with_stats.append({
                 'route': route,
                 'used_vehicles': used_vehicles_str,
@@ -272,6 +287,8 @@ def ajax_route_parts(request):
     if not route_id:
         return HttpResponseBadRequest('route_id missing')
 
+    product_id = request.GET.get('product_id')
+    quantity = int(request.GET.get('quantity', '0'))
 
     parts_qs = RoutePart_ST.objects.using('stage').select_related(
         'start_address', 'end_address', 'route__warehouse_connection__warehouse1'
@@ -281,7 +298,7 @@ def ajax_route_parts(request):
     total_emission = total_duration = total_cost = 0.0
 
     for p in parts_qs:
-        vehicle, emission, user, duration, cost = tempshipment(p)
+        vehicle, emission, user, duration, cost = tempshipment(p,product_id,quantity)
         total_emission += emission or 0.0
         total_duration += duration or 0.0
         total_cost += cost or 0.0

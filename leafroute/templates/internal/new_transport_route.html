@@ -83,6 +83,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const co2Input = document.getElementById('expected-co2-input');
     const durationInput = document.getElementById('expected-duration-input');
     const form = document.getElementById('select-route-form');
+    const productId = form.querySelector('input[name="product"]').value;
+    const quantity = form.querySelector('input[name="quantity"]').value;
 
     // Handle show/hide and load of route parts via AJAX
     container.addEventListener('click', async function(e) {
@@ -104,7 +106,9 @@ document.addEventListener('DOMContentLoaded', function() {
         row.style.display = 'table-row';
 
         try {
-            const url = "{% url 'internal:ajax_route_parts' %}?route_id=" + encodeURIComponent(routeId);
+            let url = `{% url 'internal:ajax_route_parts' %}?route_id=${encodeURIComponent(routeId)}`;
+            url += `&product_id=${encodeURIComponent(productId)}`;
+            url += `&quantity=${encodeURIComponent(quantity)}`;
             const resp = await fetch(url, { method: 'GET', headers: { 'Accept': 'application/json' } });
 
             if (!resp.ok) {
