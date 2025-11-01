@@ -11,7 +11,7 @@ from leafroute.apps.internal.models import (
 from leafroute.apps.internal_dm.models import (
     DimOrder, DimVehicle, DimProduct, DimRoute, DimDate, FactShipment
 )
-from django.db.models import Sum, FloatField,ObjectDoesNotExist
+from django.db.models import Sum, FloatField,ObjectDoesNotExist, F, Avg
 from django.db.models.functions import Cast
 from django.db import transaction
 from datetime import datetime,date
@@ -184,6 +184,19 @@ def etl_job():
 
             # Extract and Transform: Vehicle
             for vehicle_st in Vehicle_ST.objects.using('stage').all():
+                completed_shipments = Shipment.objects.using('default').filter(
+                    vehicle_id=vehicle_st.vehicle_id,
+                    status='done',
+                ).annotate(
+                    calc_distance=Cast(F('route_part__distance'), FloatField()),
+                    calc_duration=Cast(F('duration'), FloatField()),
+                    km_per_hour=F('calc_distance') / F('calc_duration')
+                )
+
+                avg_distance_per_hour_calc = completed_shipments.aggregate(
+                    avg_speed=Avg('km_per_hour')
+                )
+                avg_distance_per_hour_res = avg_distance_per_hour_calc.get('avg_speed')
                 vehicle, created = Vehicle.objects.using('default').update_or_create(
                     vehicle_id=vehicle_st.vehicle_id,
                     defaults={
@@ -199,7 +212,7 @@ def etl_job():
                         'address': Address.objects.using('default').get(
                             address_id=vehicle_st.address.address_id
                         ) if vehicle_st.address else None,
-                        'avg_distance_per_hour': float(vehicle_st.avg_distance_per_hour) if vehicle_st.avg_distance_per_hour else None,
+                        'avg_distance_per_hour': avg_distance_per_hour_res if avg_distance_per_hour_res else None,
                         'fuel_cost': float(vehicle_st.fuel_cost) if vehicle_st.fuel_cost else None,
                     }
                 )
