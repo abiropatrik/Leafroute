@@ -184,19 +184,23 @@ def etl_job():
 
             # Extract and Transform: Vehicle
             for vehicle_st in Vehicle_ST.objects.using('stage').all():
-                completed_shipments = Shipment.objects.using('default').filter(
-                    vehicle_id=vehicle_st.vehicle_id,
-                    status='done',
-                ).annotate(
-                    calc_distance=Cast(F('route_part__distance'), FloatField()),
-                    calc_duration=Cast(F('duration'), FloatField()),
-                    km_per_hour=F('calc_distance') / F('calc_duration')
-                )
+                if vehicle_st.avg_distance_per_hour is None:
+                    completed_shipments = Shipment.objects.using('default').filter(
+                        vehicle_id=vehicle_st.vehicle_id,
+                        status='done',
+                    ).annotate(
+                        calc_distance=Cast(F('route_part__distance'), FloatField()),
+                        calc_duration=Cast(F('duration'), FloatField()),
+                        km_per_hour=F('calc_distance') / F('calc_duration')
+                    )
 
-                avg_distance_per_hour_calc = completed_shipments.aggregate(
-                    avg_speed=Avg('km_per_hour')
-                )
-                avg_distance_per_hour_res = avg_distance_per_hour_calc.get('avg_speed')
+                    avg_distance_per_hour_calc = completed_shipments.aggregate(
+                        avg_speed=Avg('km_per_hour')
+                    )
+                    avg_distance_per_hour_res = avg_distance_per_hour_calc.get('avg_speed')
+                else:
+                    avg_distance_per_hour_res = float(vehicle_st.avg_distance_per_hour)
+                    
                 vehicle, created = Vehicle.objects.using('default').update_or_create(
                     vehicle_id=vehicle_st.vehicle_id,
                     defaults={
