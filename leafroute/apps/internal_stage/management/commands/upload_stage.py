@@ -344,23 +344,21 @@ class Command(BaseCommand):
         self.stdout.write("Created warehouse connection: London to Paris")
 
         # --- 3. Create Route 1: Road-Only ---
-        route1, _ = Route_ST.objects.update_or_create(
+        route1 = Route_ST.objects.create(
             warehouse_connection=wh_connection
         )
         RoutePart_ST.objects.update_or_create(
             route=route1,
             start_address=addr_london_wh,
             end_address=addr_paris_wh,
-            defaults={
-                "distance": None,
-                "transport_mode": "road",
-                "route_cost": "900",
-            }
+            distance= None,
+            transport_mode= "road",
+            route_cost= "900",
         )
         self.stdout.write("Created Route 1 (Road Only)")
 
         # --- 4. Create Route 2: Road-Sea-Road ---
-        route2, _ = Route_ST.objects.update_or_create(
+        route2 = Route_ST.objects.create(
             warehouse_connection=wh_connection
         )
         # Part 1: London WH -> London Port
@@ -368,26 +366,30 @@ class Command(BaseCommand):
             route=route2,
             start_address=addr_london_wh,
             end_address=addr_london_port,
-            defaults={"distance": None, "transport_mode": "road", "route_cost": "110"}
+            distance= None, 
+            transport_mode= "road", 
+            route_cost= "110"
         )
         # Part 2: London Port -> Paris Port
         RoutePart_ST.objects.update_or_create(
             route=route2,
             start_address=addr_london_port,
             end_address=addr_paris_port,
-            defaults={"distance": "350", "transport_mode": "sea", "route_cost": "5000"}
+            distance= "350", 
+            transport_mode= "sea", 
+            route_cost= "5000"
         )
         # Part 3: Paris Port -> Paris WH
         RoutePart_ST.objects.update_or_create(
             route=route2,
             start_address=addr_paris_port,
             end_address=addr_paris_wh,
-            defaults={"distance": None, "transport_mode": "road", "route_cost": "40"}
+            distance= None, transport_mode= "road", route_cost= "40"
         )
         self.stdout.write("Created Route 2 (Road-Sea-Road)")
 
         # --- 5. Create Route 3: Road-Air-Road ---
-        route3, _ = Route_ST.objects.update_or_create(
+        route3 = Route_ST.objects.create(
             warehouse_connection=wh_connection
         )
         # Part 1: London WH -> London Airport
@@ -395,21 +397,21 @@ class Command(BaseCommand):
             route=route3,
             start_address=addr_london_wh,
             end_address=addr_london_airport,
-            defaults={"distance": None, "transport_mode": "road", "route_cost": "30"}
+            distance= None, transport_mode= "road", route_cost= "30"
         )
         # Part 2: London Airport -> Paris Airport
         RoutePart_ST.objects.update_or_create(
             route=route3,
             start_address=addr_london_airport,
             end_address=addr_paris_airport,
-            defaults={"distance": "344", "transport_mode": "air", "route_cost": "10000"}
+            distance= "344", transport_mode= "air", route_cost= "10000"
         )
         # Part 3: Paris Airport -> Paris WH
         RoutePart_ST.objects.update_or_create(
             route=route3,
             start_address=addr_paris_airport,
             end_address=addr_paris_wh,
-            defaults={"distance": None, "transport_mode": "road", "route_cost": "60"}
+            distance= None, transport_mode= "road", route_cost= "60"
         )
         self.stdout.write("Created Route 3 (Road-Air-Road)")
 

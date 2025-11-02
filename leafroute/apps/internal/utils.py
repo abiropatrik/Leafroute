@@ -82,6 +82,7 @@ def user_chooser(routepart: RoutePart):
 def tempshipment(routepart: RoutePart, product_id, quantity: int):
     vehicle, emission = vehicle_chooser(routepart,product_id, quantity)
     user = user_chooser(routepart)
+    print(vehicle, user)
     if not vehicle or not user:
         return None, 0.0, None, 0.0, 0.0
 
