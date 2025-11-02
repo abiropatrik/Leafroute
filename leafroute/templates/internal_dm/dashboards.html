@@ -2,16 +2,21 @@
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 {% endblock %}
 
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'theme/css/editdata.css' %}?v=3">
+{% endblock %}
 
 {% block content %}
-  <h1>LeafRoute Dashboardok</h1>
-  <p>A vállalat teljesítményének elemzése.</p>
+<div class="container">
+  <h1>Kimutatások</h1>
 
   <hr>
 
   <div class="chart-container">
-    <h2>Megrendelők CO2 kibocsátása</h2>
-    {{ chart_customer|safe }}
+    <h4>CO2 / Térfogat (Havi bontás)</h4>
+    {{ chart_co2_volume|safe }}
   </div>
-
-  {% endblock %}
+</div>
+{% endblock %}

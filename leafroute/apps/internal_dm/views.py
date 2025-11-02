@@ -1,66 +1,83 @@
 import plotly.express as px
 import pandas as pd
 from django.shortcuts import render
-from django.db.models import Sum, Value
+from django.db.models import Sum, Value, F,FloatField
 from django.db.models.functions import Coalesce
 from django.contrib.auth.decorators import login_required
+import plotly.graph_objects as go 
 
 from leafroute.apps.internal.views import permission_or_required 
-
-# Importáld a modelledet (feltételezve, hogy a neve Factshipment és Dimorder)
-from .models import FactShipment, DimOrder 
+from .models import FactShipment 
 
 @login_required
 @permission_or_required('internal.organiser_tasks','internal.manager_tasks')
 def dashboards(request):
-    
-    # --- Példa: 7. pont (CO2 Megrendelőnként)  ---
-
-    # 1. Adatlekérdezés (ORM)
-    customer_co2_data = FactShipment.objects.values(
-        'orderid__userfirstname', # 
-        'orderid__userlastname'   # 
+    monthly_data = FactShipment.objects.values(
+        'shipmentenddate__year', 
+        'shipmentenddate__month'
     ).annotate(
-        total_co2=Coalesce(Sum('co2emission'), Value(0.0)) # 
-    ).order_by('-total_co2') # Sorba rendezvee
+        total_co2_g=Coalesce(Sum('co2emission'), Value(0.0)),
+        total_volume_m3=Coalesce(Sum(F('quantitytransported') * F('productid__size')), Value(1.0), output_field=FloatField()) # m³ (elkerüljük a 0-val osztást, 1.0-t használva)
+    ).order_by('shipmentenddate__year', 'shipmentenddate__month') 
 
-    # 2. Adatfeldolgozás (Pandas)
-    df_customer_co2 = pd.DataFrame(list(customer_co2_data))
+    df_monthly = pd.DataFrame(list(monthly_data))
 
-    # Szebb nevek létrehozása a grafikonhoz
-    if not df_customer_co2.empty:
-        df_customer_co2['customer_name'] = df_customer_co2['orderid__userfirstname'] + ' ' + df_customer_co2['orderid__userlastname']
+    if not df_monthly.empty:
+        df_for_datetime = df_monthly.rename(columns={
+            'shipmentenddate__year': 'year',
+            'shipmentenddate__month': 'month'
+        })
+        df_for_datetime['day'] = 1
+        
+        df_monthly['month_dt'] = pd.to_datetime(df_for_datetime[['year', 'month', 'day']])
+
+        df_monthly['co2_per_volume_kg_m3'] = df_monthly.apply(
+            lambda row: (row['total_co2_g'] / 1000) / row['total_volume_m3'] if row['total_volume_m3'] > 0 else 0,
+            axis=1
+        )
+        
+        df_monthly['month_str'] = df_monthly['month_dt'].dt.strftime('%Y-%B')
+        df_monthly = df_monthly.sort_values(by='month_dt')
+        
     else:
-        # Kezeljük le az üres adatbázist
-        df_customer_co2 = pd.DataFrame(columns=['customer_name', 'total_co2'])
+        df_monthly = pd.DataFrame(columns=[
+            'month_dt', 'month_str', 'co2_per_volume_kg_m3'
+        ])
 
 
-    # 3. Ábra generálás (Plotly Express)
-    fig_customer = px.bar(
-        df_customer_co2.head(3), # Csak a top 3-at mutatjuk
-        x='customer_name',
-        y='total_co2',
-        title='Top 3 Megrendelő CO2 Kibocsátás Alapján',
-        labels={'customer_name': 'Megrendelő', 'total_co2': 'Összes CO2 (kg)'}
+    fig_co2_volume = go.Figure()
+
+    fig_co2_volume.add_trace(go.Scatter(
+        x=df_monthly['month_dt'].tolist(),            
+        y=df_monthly['co2_per_volume_kg_m3'].tolist(), 
+        mode='lines+markers',                         
+        name='CO2 / Térfogat'
+    ))
+
+    fig_co2_volume.update_layout(
+        title='CO2 Kibocsátás / Szállított Térfogat (Havi Bontás)',
+        xaxis_title='Hónap',
+        yaxis_title='CO2 / Térfogat (kg/m³)'
     )
 
-    # 4. Konvertálás HTML-be
-    # include_plotlyjs=False -> A JS fájlt elég egyszer behúzni a template-ben
-    # full_html=False -> Csak magát a <div>-et adja vissza, nem egy teljes HTML oldalt
-    chart_customer_div = fig_customer.to_html(include_plotlyjs=False, full_html=False)
+    if not df_monthly.empty:
+        fig_co2_volume.update_xaxes(
+            ticktext=df_monthly['month_str'].tolist(),
+            tickvals=df_monthly['month_dt'].tolist()
+        )
 
-    
-    # --- Itt jönne a többi 8 dashboard generálása hasonló logikával ---
-    # ...
-    # chart_vehicle_div = ...
-    # chart_age_fuel_div = ...
-    
-    
-    # 5. Adatok átadása a template-nek
+        if not df_monthly.empty:
+            fig_co2_volume.update_xaxes(
+                ticktext=df_monthly['month_str'].tolist(),
+                tickvals=df_monthly['month_dt'].tolist() 
+        )
+
+    print(df_monthly['co2_per_volume_kg_m3'].tolist())
+    chart_co2_volume_div = fig_co2_volume.to_html(include_plotlyjs=False, full_html=False)
+
+    # Giving back data to template
     context = {
-        'chart_customer': chart_customer_div,
-        # 'chart_vehicle': chart_vehicle_div,
-        # 'chart_age_fuel': chart_age_fuel_div,
+        'chart_co2_volume': chart_co2_volume_div, 
     }
 
     return render(request, 'internal_dm/dashboards.html', context)

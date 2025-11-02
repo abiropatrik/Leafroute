@@ -65,11 +65,14 @@ class Command(BaseCommand):
         # DimOrder (50 db)
         orders = []
         for _ in range(50):
+            userfirstname = fake.first_name()
+            userlastname = fake.last_name()
+            randint = random.randint(75, 99)
             orders.append(DimOrder.objects.create(
                 orderstatus=random.choice(['pending', 'in_progress', 'completed']),
-                userfirstname=fake.first_name(),
-                userlastname=fake.last_name(),
-                useremail=fake.email()
+                userfirstname=userfirstname,
+                userlastname=userlastname,
+                useremail=userfirstname.lower() + '.' + userlastname.lower()+'_' + str(randint) + '@leafroute.com'
             ))
 
 
