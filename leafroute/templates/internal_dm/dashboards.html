@@ -18,5 +18,40 @@
     <h4>CO2 / Térfogat (Havi bontás)</h4>
     {{ chart_co2_volume|safe }}
   </div>
+
+  <div class="chart-container">
+    <h4>CO2 / Táv (Járműtípusonként)</h4>
+    {{ chart_vehicle_co2|safe }}
+  </div>
+
+  <div class="chart-container">
+    <h4>Költség / Táv (Járműtípusonként)</h4>
+    {{ chart_vehicle_cost|safe }}
+  </div>
+
+  <div class="chart-container">
+    <h4>Átlagsebesség / Táv (Járműtípusonként)</h4>
+    {{ chart_vehicle_speed|safe }}
+  </div>
+
+  <div class="chart-container">
+    <h4>Kibocsátott CO2 aránya a megtett távolsághoz</h4>
+    {{ chart_co2_dist|safe }}
+  </div>
+
+  <div class="chart-container">
+    <h4>Kibocsátott CO2 aránya a jármű életkorához</h4>
+    {{ chart_prod_co2|safe }}
+  </div>
+
+  <div class="chart-container">
+    <h4>Milyen arányban választják az egyes shipmentekez az egyes járműfajtákat</h4>
+    {{ chart_vehicle_pie|safe }}
+  </div>
+
+  <div class="chart-container">
+    <h4>Útvonalak használata</h4>
+    {{ chart_route_count|safe }}
+  </div>
 </div>
 {% endblock %}
