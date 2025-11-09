@@ -26,7 +26,7 @@ def vehicle_chooser(routepart: RoutePart,product_id, quantity):
     elif transport_mode == 'rail':
         vehicletype = ['train']
     elif transport_mode == 'air':
-        vehicletype = ['plane']
+        vehicletype = ['airplane']
     elif transport_mode == 'sea':
         vehicletype = ['ship']
     else:
@@ -80,6 +80,7 @@ def user_chooser(routepart: RoutePart):
 
 
 def tempshipment(routepart: RoutePart, product_id, quantity: int):
+    print("Route Part:", routepart)
     vehicle, emission = vehicle_chooser(routepart,product_id, quantity)
     user = user_chooser(routepart)
     print(vehicle, user)

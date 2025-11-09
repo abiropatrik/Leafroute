@@ -136,6 +136,9 @@ class Vehicle(models.Model):
     class Meta:
         db_table = "Vehicles"
 
+    def __str__(self):
+        return f"{self.brand} {self.model} ({self.type})"
+
 
 class Product(models.Model):
     product_id = models.AutoField(primary_key=True, db_column="ProductID")
