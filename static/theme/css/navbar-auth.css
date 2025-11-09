@@ -2,7 +2,7 @@
 .navbar {
     background-color: rgba(0, 0, 0, 0.8);
     color: #fff;
-    padding: 10px 20px;
+    padding: 0.625rem 1.25rem; 
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -10,34 +10,35 @@
 }
 
 .navbar .logo {
-    height: 30px;
-    margin-left: 10px;
+    height: 1.875rem;
+    margin-left: 0.625rem; 
 }
 
 .auth-navbar {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 0.9375rem; 
     margin-left: auto;
 }
 
 
 /* Hamburger Menu */
 .hamburger-menu {
-    font-size: 20px;
+    font-size: 1.25rem;
     background: none;
     border: none;
     color: #fff;
     cursor: pointer;
-    margin-left: 10px;}
+    margin-left: 0.625rem; 
+}
 
 /* Shared link styles for navbar login and sidebar links */
 .nav-link {
     color: #fff;
     text-decoration: none;
-    font-size: 18px; /* match sidebar */
+    font-size: 1.125rem;
     display: block;
-    padding: 10px 15px; /* match sidebar */
+    padding: 0.625rem 0.9375rem;
     transition: color 0.3s ease;
 }
 
@@ -60,7 +61,7 @@
     background-color: rgba(0, 0, 0, 0.8);
     overflow-x: hidden;
     transition: 0.3s;
-    padding-top: 60px;
+    padding-top: 3.75rem;
 }
 
 .sidebar a {
@@ -69,9 +70,9 @@
 
 .sidebar .closebtn {
     position: absolute;
-    top: 10px;
-    right: 10px;
-    font-size: 36px;
+    top: 0.625rem;
+    right: 0.625rem;
+    font-size: 2.25rem;
     color: #ddd;
     cursor: pointer;
 }
@@ -86,17 +87,17 @@
     position: absolute;
     right: 0;
     background-color: #ddd;
-    min-width: 100px;
-    box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
-    border-radius: 8px;
+    min-width: 6.25rem;
+    box-shadow: 0rem 0.5rem 1rem rgba(0,0,0,0.2);
+    border-radius: 0.5rem;
     z-index: 1000;
-    padding: 8px 0;
+    padding: 0.5rem 0;
 }
 
 .dropdown-content form button {
     display: block;
     width: 100%;
-    padding: 10px 15px;
+    padding: 0.625rem 0.9375rem;
     text-align: center;
     justify-content: center;
     border: none;
@@ -104,7 +105,7 @@
     cursor: pointer;
     color: black;
     text-decoration: none;
-    font-size: 14px;
+    font-size: 0.875rem; 
 }
 
 .dropdown-content a:hover,
@@ -117,29 +118,29 @@
 }
 
 .user-icon {
-    width: 35px;
-    height: 35px;
+    width: 2.1875rem; 
+    height: 2.1875rem; 
     border-radius: 50%;
     cursor: pointer;
 }
 
-/* Responsive Design 
-@media (max-width: 768px) {
+/* Responsive Design */
+@media (max-width: 48rem) {
     .navbar {
-        flex-wrap: wrap; 
+        flex-wrap: wrap;
         text-align: center;
     }
 
     .navbar img {
-        margin-bottom: 10px;
+        margin-bottom: 0.625rem;
     }
 
     .navbar span {
-        margin: 5px 0;
+        margin: 0.3125rem 0;
     }
 
     .navbar span[style="float:right"] {
         margin-left: 0;
         justify-content: center;
     }
-}*/
+}
