@@ -18,7 +18,7 @@ def real_CO2_emission(fuelconsumed: float, fuel_type: str) -> float:
     return fuelconsumed * emission_factors.get(fuel_type.lower(), 0)
 
 
-def vehicle_chooser(routepart: RoutePart,product_id, quantity):
+def vehicle_chooser(routepart: RoutePart,shipmentccm):
     transport_mode = routepart.transport_mode
 
     if transport_mode == 'road':
@@ -32,8 +32,6 @@ def vehicle_chooser(routepart: RoutePart,product_id, quantity):
     else:
         vehicletype = []
 
-    product = Product.objects.using('default').get(product_id=product_id)
-    shipmentccm = product.size * quantity
 
     vehicles = Vehicle.objects.using('default').filter(
         address_id=routepart.start_address.address_id,
@@ -52,7 +50,7 @@ def vehicle_chooser(routepart: RoutePart,product_id, quantity):
     best_vehicle = min(vehicles, key=emission_for, default=None)
 
     if best_vehicle:
-        best_emission = emission_for(best_vehicle)
+        best_emission = emission_for(best_vehicle)/shipmentccm
         return best_vehicle, best_emission
     else:
         return None, 0.0
@@ -80,17 +78,23 @@ def user_chooser(routepart: RoutePart):
 
 
 def tempshipment(routepart: RoutePart, product_id, quantity: int):
-    print("Route Part:", routepart)
-    vehicle, emission = vehicle_chooser(routepart,product_id, quantity)
+    product = Product.objects.using('default').get(product_id=product_id)
+    shipmentccm = product.size * quantity
+    vehicle, emission = vehicle_chooser(routepart,shipmentccm)
     user = user_chooser(routepart)
-    print(vehicle, user)
     if not vehicle or not user:
         return None, 0.0, None, 0.0, 0.0
 
     duration = float(routepart.distance or 0) / float(vehicle.avg_distance_per_hour or 1)
-    transportcost = (
-        float(vehicle.consumption or 0) * (float(routepart.distance or 0) / 100) * float(vehicle.fuel_cost or 0)
-        + duration * float(user.salary or 0)
-    )
-
+    if vehicle.consumption:
+        transportcost = (
+            float(vehicle.consumption) * (float(routepart.distance or 0) / 100) * float(vehicle.fuel_cost or 0)
+            + duration * float(user.salary or 0) + float(routepart.route_cost or 0)
+        )
+    else:
+        transportcost = (float(routepart.distance or 0) / 100) * float(vehicle.fuel_cost or 0) + duration * float(user.salary or 0) + float(routepart.route_cost or 0)
+    print(transportcost,shipmentccm)
+    transportcost=(transportcost/vehicle.full_capacity)*shipmentccm
+    print("Route Part:", routepart)
+    print(vehicle, user)
     return vehicle, emission, user, duration, transportcost
