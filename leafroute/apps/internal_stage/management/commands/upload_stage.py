@@ -113,11 +113,11 @@ class Command(BaseCommand):
             {"city_name": "Rotterdam", "type": "station", "name": "Rotterdam Centraal", "street": "Stationsplein", "number": "1"},
             {"city_name": "Rotterdam", "type": "airport", "name": "Rotterdam The Hague Airport", "street": "Rotterdam Airportplein", "number": "60"},
             {"city_name": "Rotterdam", "type": "port", "name": "Port of Rotterdam", "street": "Maasvlakte Plaza", "number": ""},
-            {"city_name": "London", "type": "station", "name": "St Pancras International", "street": "Euston Rd", "number": ""},
-            {"city_name": "London", "type": "airport", "name": "Heathrow Airport", "street": "Longford", "number": "TW6"},
+            {"city_name": "London", "type": "station", "name": "St Pancras International", "street": "Euston Rd", "number": ""},#tst 18
+            {"city_name": "London", "type": "airport", "name": "Heathrow Airport", "street": "Longford", "number": "TW6"},#tst 19
             {"city_name": "London", "type": "port", "name": "Port of London", "street": "Royal Pier Rd", "number": ""},
-            {"city_name": "Paris", "type": "station", "name": "Gare du Nord", "street": "Rue de Dunkerque", "number": "18"},
-            {"city_name": "Paris", "type": "airport", "name": "Charles de Gaulle Airport", "street": "Route de l'Épinette", "number": "95700"},
+            {"city_name": "Paris", "type": "station", "name": "Gare du Nord", "street": "Rue de Dunkerque", "number": "18"},#tst 21
+            {"city_name": "Paris", "type": "airport", "name": "Charles de Gaulle Airport", "street": "Route de l'Épinette", "number": "95700"},#tst 22
             {"city_name": "Paris", "type": "port", "name": "Port de Gennevilliers", "street": "Route du Môle", "number": "1"},
             {"city_name": "Beijing", "type": "station", "name": "Beijing Railway Station", "street": "Jia, Jianguomen N St", "number": ""},
             {"city_name": "Beijing", "type": "airport", "name": "Beijing Capital International Airport", "street": "Shunyi District", "number": ""},
@@ -241,26 +241,31 @@ class Command(BaseCommand):
         # 5b. Define Vehicle Templates
         vehicle_templates = {
             "truck": [
-                {"brand": "Scania", "model": "R 450", "year": "2021", "fuel": "diesel", "cons": "29", "cap": "90", "avg_hr": "80", "cost": "646"},
-                {"brand": "Volvo", "model": "FH16", "year": "2022", "fuel": "diesel", "cons": "32", "cap": "95", "avg_hr": "80", "cost": "646"},
-                {"brand": "Mercedes-Benz", "model": "Actros", "year": "2020", "fuel": "diesel", "cons": "30", "cap": "90", "avg_hr": "80", "cost": "646"},
+                {"brand": "Scania", "model": "R 500", "year": "2022", "fuel": "diesel", "cons": "23", "cap": "33", "avg_hr": "80", "cost": "646"},
+                {"brand": "Scania", "model": "460 S", "year": "2025", "fuel": "diesel", "cons": "21", "cap": "90", "avg_hr": "80", "cost": "646"},
+                {"brand": "Scania", "model": "R560", "year": "2013", "fuel": "diesel", "cons": "40", "cap": "90", "avg_hr": "80", "cost": "646"},
+                {"brand": "Scania", "model": "R440", "year": "2012", "fuel": "diesel", "cons": "35", "cap": "90", "avg_hr": "80", "cost": "646"},
+                {"brand": "Scania", "model": "S580", "year": "2018", "fuel": "diesel", "cons": "32", "cap": "90", "avg_hr": "80", "cost": "646"},
+                {"brand": "MAN", "model": "F2000", "year": "1988", "fuel": "diesel", "cons": "37", "cap": "70", "avg_hr": "80", "cost": "646"},
+                {"brand": "MAN", "model": "TGX2000", "year": "2020", "fuel": "diesel", "cons": "31", "cap": "90", "avg_hr": "80", "cost": "646"},
+                {"brand": "Volvo", "model": "Globetotter", "year": "2016", "fuel": "diesel", "cons": "34", "cap": "95", "avg_hr": "80", "cost": "646"},
+                {"brand": "Volvo", "model": "FH12", "year": "2016", "fuel": "diesel", "cons": "34", "cap": "95", "avg_hr": "80", "cost": "646"},
+                {"brand": "Mercedes-Benz", "model": "Actros", "year": "2024", "fuel": "diesel", "cons": "34", "cap": "90", "avg_hr": "80", "cost": "646"},
+                {"brand": "Mercedes-Benz", "model": "Actros", "year": "2018", "fuel": "diesel", "cons": "32", "cap": "90", "avg_hr": "80", "cost": "646"},
             ],
             "van": [
-                {"brand": "Ford", "model": "Transit", "year": "2022", "fuel": "diesel", "cons": "9", "cap": "15", "avg_hr": "70", "cost": "646"},
-                {"brand": "Mercedes-Benz", "model": "Sprinter", "year": "2023", "fuel": "gasoline", "cons": "0", "cap": "14", "avg_hr": "65", "cost": "620"},
-                {"brand": "Renault", "model": "Master E-Tech", "year": "2022", "fuel": "electricity", "cons": "0", "cap": "13", "avg_hr": "60", "cost": "152"},
+                {"brand": "Ford", "model": "Transit", "year": "2022", "fuel": "diesel", "cons": "9", "cap": "5", "avg_hr": "90", "cost": "646"},
+                {"brand": "Mercedes-Benz", "model": "Sprinter", "year": "2004", "fuel": "gasoline", "cons": "14", "cap": "5", "avg_hr": "90", "cost": "620"},
+                {"brand": "Mercedes-Benz", "model": "Sprinter", "year": "2018", "fuel": "diesel", "cons": "14", "cap": "5", "avg_hr": "90", "cost": "646"},
+                {"brand": "Renault", "model": "Master E-Tech", "year": "2022", "fuel": "electricity", "cons": "0", "cap": "4", "avg_hr": "50", "cost": "152"},
             ],
             "airplane": [
-                {"brand": "Boeing", "model": "747-8F", "year": "2018", "fuel": "kerosene", "cons": "1200", "cap": "750", "avg_hr": "900", "cost": "850"},
-                {"brand": "Airbus", "model": "A330-200F", "year": "2019", "fuel": "jet_kerosene", "cons": "950", "cap": "475", "avg_hr": "870", "cost": "970"},
-            ],
-            "ship": [
-                {"brand": "Maersk", "model": "Triple E Class", "year": "2017", "fuel": "fuel_oil", "cons": "10000", "cap": "10000", "avg_hr": "40", "cost": "312"},
-                {"brand": "Evergreen", "model": "Ever Ace", "year": "2021", "fuel": "fuel_oil", "cons": "12000", "cap": "12000", "avg_hr": "38", "cost": "312"},
+                {"brand": "Boeing", "model": "747-8F", "year": "2018", "fuel": "kerosene", "cons": "120", "cap": "857", "avg_hr": "900", "cost": "1200"},
+                {"brand": "Airbus", "model": "A330-200F", "year": "2019", "fuel": "jet_kerosene", "cons": "65", "cap": "475", "avg_hr": "870", "cost": "1500"},
             ],
             "train": [
-                {"brand": "Siemens", "model": "Vectron", "year": "2020", "fuel": "electricity", "cons": "0", "cap": "1500", "avg_hr": "100", "cost": "152"},
-                {"brand": "Alstom", "model": "Traxx", "year": "2019", "fuel": "electricity", "cons": "0", "cap": "1400", "avg_hr": "100", "cost": "152"},
+                {"brand": "Siemens", "model": "Vectron", "year": "2020", "fuel": "electricity", "cons": "0", "cap": "1600", "avg_hr": "70", "cost": "152"},
+                {"brand": "Alstom", "model": "Traxx", "year": "2019", "fuel": "electricity", "cons": "0", "cap": "1400", "avg_hr": "70", "cost": "152"},
             ]
         }
         
@@ -287,8 +292,17 @@ class Command(BaseCommand):
 
             for _ in range(count):
                 v = random.choice(templates)
-                addr = random.choice(address_list)
-
+                #addr = random.choice(address_list)
+                #just for testing (if you want to test the dm, comment this out and comment back the addr= line):
+                if vehicle_type in ["truck", "van"]:
+                    addrint = random.choice([3,21,22])
+                elif vehicle_type == "airplane":
+                    addrint = 19
+                elif vehicle_type == "ship":
+                    addrint = 20
+                elif vehicle_type == "train":
+                    addrint = 18
+                addr= Address_ST.objects.get(address_id=addrint)
                 # 
                 Vehicle_ST.objects.create(
                     brand=v["brand"],
@@ -324,8 +338,8 @@ class Command(BaseCommand):
         addr_paris_wh = wh_paris.address
 
         # Hubs
-        addr_london_port = Address_ST.objects.get(institution_name="Port of London")
-        addr_paris_port = Address_ST.objects.get(institution_name="Port de Gennevilliers")
+        addr_london_station = Address_ST.objects.get(institution_name="St Pancras International")
+        addr_paris_station = Address_ST.objects.get(institution_name="Gare du Nord")
         addr_london_airport = Address_ST.objects.get(institution_name="Heathrow Airport")
         addr_paris_airport = Address_ST.objects.get(institution_name="Charles de Gaulle Airport")
 
@@ -361,32 +375,32 @@ class Command(BaseCommand):
         route2 = Route_ST.objects.create(
             warehouse_connection=wh_connection
         )
-        # Part 1: London WH -> London Port
+        # Part 1: London WH -> London Station
         RoutePart_ST.objects.update_or_create(
             route=route2,
             start_address=addr_london_wh,
-            end_address=addr_london_port,
+            end_address=addr_london_station,
             distance= None, 
             transport_mode= "road", 
-            route_cost= "110"
+            route_cost= "1100"
         )
-        # Part 2: London Port -> Paris Port
+        # Part 2: London Station -> Paris Station
         RoutePart_ST.objects.update_or_create(
             route=route2,
-            start_address=addr_london_port,
-            end_address=addr_paris_port,
-            distance= "350", 
-            transport_mode= "sea", 
-            route_cost= "5000"
+            start_address=addr_london_station,
+            end_address=addr_paris_station,
+            distance= "342", 
+            transport_mode= "rail", 
+            route_cost= "500000"
         )
-        # Part 3: Paris Port -> Paris WH
+        # Part 3: Paris Station -> Paris WH
         RoutePart_ST.objects.update_or_create(
             route=route2,
-            start_address=addr_paris_port,
+            start_address=addr_paris_station,
             end_address=addr_paris_wh,
             distance= None, transport_mode= "road", route_cost= "40"
         )
-        self.stdout.write("Created Route 2 (Road-Sea-Road)")
+        self.stdout.write("Created Route 2 (Road-train-Road)")
 
         # --- 5. Create Route 3: Road-Air-Road ---
         route3 = Route_ST.objects.create(
@@ -404,7 +418,7 @@ class Command(BaseCommand):
             route=route3,
             start_address=addr_london_airport,
             end_address=addr_paris_airport,
-            distance= "344", transport_mode= "air", route_cost= "10000"
+            distance= "344", transport_mode= "air", route_cost= "100000"
         )
         # Part 3: Paris Airport -> Paris WH
         RoutePart_ST.objects.update_or_create(
