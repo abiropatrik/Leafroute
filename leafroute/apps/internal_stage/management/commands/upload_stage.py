@@ -260,8 +260,8 @@ class Command(BaseCommand):
                 {"brand": "Renault", "model": "Master E-Tech", "year": "2022", "fuel": "electricity", "cons": "0", "cap": "4", "avg_hr": "50", "cost": "152"},
             ],
             "airplane": [
-                {"brand": "Boeing", "model": "747-8F", "year": "2018", "fuel": "kerosene", "cons": "120", "cap": "857", "avg_hr": "900", "cost": "1200"},
-                {"brand": "Airbus", "model": "A330-200F", "year": "2019", "fuel": "jet_kerosene", "cons": "65", "cap": "475", "avg_hr": "870", "cost": "1500"},
+                {"brand": "Boeing", "model": "747-8F", "year": "2018", "fuel": "kerosene", "cons": "1600", "cap": "857", "avg_hr": "900", "cost": "1200"},
+                {"brand": "Airbus", "model": "A330-200F", "year": "2019", "fuel": "jet_kerosene", "cons": "880", "cap": "475", "avg_hr": "870", "cost": "1500"},
             ],
             "train": [
                 {"brand": "Siemens", "model": "Vectron", "year": "2020", "fuel": "electricity", "cons": "0", "cap": "1600", "avg_hr": "70", "cost": "152"},
@@ -367,7 +367,7 @@ class Command(BaseCommand):
             end_address=addr_paris_wh,
             distance= None,
             transport_mode= "road",
-            route_cost= "900",
+            route_cost= "40000",
         )
         self.stdout.write("Created Route 1 (Road Only)")
 
@@ -382,7 +382,7 @@ class Command(BaseCommand):
             end_address=addr_london_station,
             distance= None, 
             transport_mode= "road", 
-            route_cost= "1100"
+            route_cost= "0"
         )
         # Part 2: London Station -> Paris Station
         RoutePart_ST.objects.update_or_create(
@@ -391,14 +391,14 @@ class Command(BaseCommand):
             end_address=addr_paris_station,
             distance= "342", 
             transport_mode= "rail", 
-            route_cost= "500000"
+            route_cost= "2450000"
         )
         # Part 3: Paris Station -> Paris WH
         RoutePart_ST.objects.update_or_create(
             route=route2,
             start_address=addr_paris_station,
             end_address=addr_paris_wh,
-            distance= None, transport_mode= "road", route_cost= "40"
+            distance= None, transport_mode= "road", route_cost= "0"
         )
         self.stdout.write("Created Route 2 (Road-train-Road)")
 
@@ -411,21 +411,21 @@ class Command(BaseCommand):
             route=route3,
             start_address=addr_london_wh,
             end_address=addr_london_airport,
-            distance= None, transport_mode= "road", route_cost= "30"
+            distance= None, transport_mode= "road", route_cost= "0"
         )
         # Part 2: London Airport -> Paris Airport
         RoutePart_ST.objects.update_or_create(
             route=route3,
             start_address=addr_london_airport,
             end_address=addr_paris_airport,
-            distance= "344", transport_mode= "air", route_cost= "100000"
+            distance= "344", transport_mode= "air", route_cost= "10000000"
         )
         # Part 3: Paris Airport -> Paris WH
         RoutePart_ST.objects.update_or_create(
             route=route3,
             start_address=addr_paris_airport,
             end_address=addr_paris_wh,
-            distance= None, transport_mode= "road", route_cost= "60"
+            distance= None, transport_mode= "road", route_cost= "0"
         )
         self.stdout.write("Created Route 3 (Road-Air-Road)")
 

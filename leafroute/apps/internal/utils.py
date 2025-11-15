@@ -50,7 +50,8 @@ def vehicle_chooser(routepart: RoutePart,shipmentccm):
     best_vehicle = min(vehicles, key=emission_for, default=None)
 
     if best_vehicle:
-        best_emission = emission_for(best_vehicle)/shipmentccm
+        best_emission = (emission_for(best_vehicle)/best_vehicle.full_capacity)*shipmentccm
+
         return best_vehicle, best_emission
     else:
         return None, 0.0
@@ -81,6 +82,7 @@ def tempshipment(routepart: RoutePart, product_id, quantity: int):
     product = Product.objects.using('default').get(product_id=product_id)
     shipmentccm = product.size * quantity
     vehicle, emission = vehicle_chooser(routepart,shipmentccm)
+    print(emission)
     user = user_chooser(routepart)
     if not vehicle or not user:
         return None, 0.0, None, 0.0, 0.0
@@ -93,7 +95,6 @@ def tempshipment(routepart: RoutePart, product_id, quantity: int):
         )
     else:
         transportcost = (float(routepart.distance or 0) / 100) * float(vehicle.fuel_cost or 0) + duration * float(user.salary or 0) + float(routepart.route_cost or 0)
-    print(transportcost,shipmentccm)
     transportcost=(transportcost/vehicle.full_capacity)*shipmentccm
     print("Route Part:", routepart)
     print(vehicle, user)
