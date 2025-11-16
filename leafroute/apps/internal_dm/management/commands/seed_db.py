@@ -121,7 +121,7 @@ class Command(BaseCommand):
             fuel_consumed = (distance / 100) * consumption
             
             co2_factor = co2_factors.get(vehicle.fuel_type, 2.5)
-            co2_emission = fuel_consumed * co2_factor # kg CO2
+            co2_emission = (fuel_consumed * co2_factor)#/vehicle.full_capacity)*product.size # kg CO2
             
             start_date_obj = datetime.datetime(date.year, date.month, date.day, date.hour)
             shipmentstart=DimDate.objects.get(dateid=int(start_date_obj.strftime('%Y%m%d%H')))
@@ -148,8 +148,8 @@ class Command(BaseCommand):
                 routecost=routecost_total,
                 unitprice=random.uniform(10000.0, 500000.0),
                 consumption=consumption,
-                fuelcost=fuelcost_total,
-                productionyear=random.randint(2000, 2025), 
+                fuelcost=fuel_cost_per_liter,
+                productionyear=vehicle.production_year, 
                 orderid=order,
                 productid=dimproductinstance,
                 routeid=route,

@@ -191,7 +191,7 @@ def dashboards(request):
     fig_vehicle_speed.add_trace(go.Bar(
         x=df_vehicle['vehicleid__type'].tolist(),
         y=df_vehicle['km_per_hour'].tolist(),
-        text=df_vehicle['km_per_hour'].apply(lambda x: f'{x:.2f} km/h'),
+        text=df_vehicle['km_per_hour'].apply(lambda x: f'{x:.2f} km/hour'),
         textposition='auto',
         marker=dict(color=df_vehicle['color'].tolist())
     ))
@@ -199,7 +199,7 @@ def dashboards(request):
     fig_vehicle_speed.update_layout(
         title='Megtett km/ Szállítás hossza (Járműtípusonként)',
         xaxis_title='Járműtípus',
-        yaxis_title='Költség / Távolság (Ft/km)'
+        yaxis_title='Megtett km/ Szállítás hossza'
     )
     chart_vehicle_speed_div = fig_vehicle_speed.to_html(include_plotlyjs=False, full_html=False)
 
@@ -244,45 +244,45 @@ def dashboards(request):
     chart_co2_dist_div = fig_co2_dist.to_html(include_plotlyjs=False, full_html=False)
 
     ##############################################################################
-    # #vehicle age and co2 relation
+    # #vehicle age and fuelconsumption relation
     # ##############################################################################
     prod_year_data = FactShipment.objects.filter(
         productionyear__gt=0,
-        co2emission__gt=0
+        vehicleid__type='truck'
     ).values(
         'productionyear'
     ).annotate(
-        avg_co2_g=Coalesce(Avg('co2emission'), 0.0)
+        avg_cons=Coalesce(Avg('consumption'), 0.0)
     ).order_by('productionyear')
 
     df_prod_year = pd.DataFrame(list(prod_year_data))
 
-    if not df_prod_year.empty:
-        df_prod_year['productionyear'] = df_prod_year['productionyear'].astype(int)
+    # if not df_prod_year.empty:
+    #     df_prod_year['productionyear'] = df_prod_year['productionyear'].astype(int)
 
-        df_prod_year['avg_co2_kg'] = df_prod_year['avg_co2_g'] / 1000.0
-    else:
-        df_prod_year = pd.DataFrame(columns=['productionyear', 'avg_co2_kg'])
+    #     df_prod_year['avg_cons'] = df_prod_year['avg_cons']
+    # else:
+    #     df_prod_year = pd.DataFrame(columns=['productionyear', 'avg_cons'])
 
     fig_prod_co2 = go.Figure()
 
     fig_prod_co2.add_trace(go.Scatter(
         x=df_prod_year['productionyear'].tolist(),
-        y=df_prod_year['avg_co2_kg'].tolist(),
+        y=df_prod_year['avg_cons'].tolist(),
         mode='lines+markers',
-        name='Átlagos CO2',
+        name='Átlagos fogyasztás',
         line=dict(color='green'),
         hovertemplate=(
             '<b>Gyártási év:</b> %{x}<br>' +
-            '<b>Átlagos CO2:</b> %{y:.2f} kg' +
+            '<b>Átlagos fogyasztás:</b> %{y:.2f} l/100km' +
             '<extra></extra>'
         )
     ))
 
     fig_prod_co2.update_layout(
-        title='Jármű Gyártási Éve és Átlagos CO2 Kibocsátás Kapcsolata',
+        title='Teherautó gyártási éve és átlagos fogyasztásának kapcsolata',
         xaxis_title='Gyártási Év',
-        yaxis_title='Átlagos CO2 Kibocsátás (kg)'
+        yaxis_title='Átlagos fogyasztás (l/100km)'
     )
 
     chart_prod_co2_div = fig_prod_co2.to_html(include_plotlyjs=False, full_html=False)

@@ -246,11 +246,10 @@ class Command(BaseCommand):
                 {"brand": "Scania", "model": "R560", "year": "2013", "fuel": "diesel", "cons": "40", "cap": "90", "avg_hr": "80", "cost": "646"},
                 {"brand": "Scania", "model": "R440", "year": "2012", "fuel": "diesel", "cons": "35", "cap": "90", "avg_hr": "80", "cost": "646"},
                 {"brand": "Scania", "model": "S580", "year": "2018", "fuel": "diesel", "cons": "32", "cap": "90", "avg_hr": "80", "cost": "646"},
-                {"brand": "MAN", "model": "F2000", "year": "1988", "fuel": "diesel", "cons": "37", "cap": "70", "avg_hr": "80", "cost": "646"},
                 {"brand": "MAN", "model": "TGX2000", "year": "2020", "fuel": "diesel", "cons": "31", "cap": "90", "avg_hr": "80", "cost": "646"},
                 {"brand": "Volvo", "model": "Globetotter", "year": "2016", "fuel": "diesel", "cons": "34", "cap": "95", "avg_hr": "80", "cost": "646"},
                 {"brand": "Volvo", "model": "FH12", "year": "2016", "fuel": "diesel", "cons": "34", "cap": "95", "avg_hr": "80", "cost": "646"},
-                {"brand": "Mercedes-Benz", "model": "Actros", "year": "2024", "fuel": "diesel", "cons": "34", "cap": "90", "avg_hr": "80", "cost": "646"},
+                {"brand": "Mercedes-Benz", "model": "Actros", "year": "2024", "fuel": "diesel", "cons": "24", "cap": "90", "avg_hr": "80", "cost": "646"},
                 {"brand": "Mercedes-Benz", "model": "Actros", "year": "2018", "fuel": "diesel", "cons": "32", "cap": "90", "avg_hr": "80", "cost": "646"},
             ],
             "van": [
@@ -292,17 +291,17 @@ class Command(BaseCommand):
 
             for _ in range(count):
                 v = random.choice(templates)
-                #addr = random.choice(address_list)
+                addr = random.choice(address_list)
                 #just for testing (if you want to test the dm, comment this out and comment back the addr= line):
-                if vehicle_type in ["truck", "van"]:
-                    addrint = random.choice([3,21,22])
-                elif vehicle_type == "airplane":
-                    addrint = 19
-                elif vehicle_type == "ship":
-                    addrint = 20
-                elif vehicle_type == "train":
-                    addrint = 18
-                addr= Address_ST.objects.get(address_id=addrint)
+                # if vehicle_type in ["truck", "van"]:
+                #     addrint = random.choice([3,21,22])
+                # elif vehicle_type == "airplane":
+                #     addrint = 19
+                # elif vehicle_type == "ship":
+                #     addrint = 20
+                # elif vehicle_type == "train":
+                #     addrint = 18
+                # addr= Address_ST.objects.get(address_id=addrint)
                 # 
                 Vehicle_ST.objects.create(
                     brand=v["brand"],
