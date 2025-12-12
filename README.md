@@ -12,8 +12,11 @@ A program megfelelő működéséhez mindenképpen szükséges:
   - Egyéni Django secret key generálása a django_key_generator.py segítségével
   - Google Maps API kulcs beszerzése (e-nélkül nem működik a stage-rétegből dw-rétegbe transzformáló ETL job)
 
-Az API kulcsot és a secret keyt a következő formátumban kell beletenni a .env fájlba:
-GOOGLE_MAPS_API_KEY='yourapicode'
-DJANGO_SECRET_KEY='yoursecretkey'
+Az API kulcsot és a secret keyt a következő formátumban kell beletenni a .env fájlba: 
+```
+GOOGLE_MAPS_API_KEY='yourapicode' 
+DJANGO_SECRET_KEY='yoursecretkey' 
+``` 
+
 
 Az alkalmazás a make compose-start utasítással indítható el.
