@@ -1,5 +1,3 @@
-# internal_dm/management/commands/seed_db.py
-
 import random
 import datetime
 from faker import Faker
@@ -62,7 +60,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f'{DimDate.objects.count()} DimDate rekord létrehozva.'))
 
         
-        # DimOrder (50 db)
+        # DimOrder
         orders = []
         for _ in range(50):
             userfirstname = fake.first_name()
@@ -76,7 +74,7 @@ class Command(BaseCommand):
             ))
 
 
-        # DimRoute (50 db)
+        # DimRoute
         routes = []
         cities = list(City.objects.all())
         for _ in range(50):
@@ -121,7 +119,7 @@ class Command(BaseCommand):
             fuel_consumed = (distance / 100) * consumption
             
             co2_factor = co2_factors.get(vehicle.fuel_type, 2.5)
-            co2_emission = (fuel_consumed * co2_factor)#/vehicle.full_capacity)*product.size # kg CO2
+            co2_emission = (fuel_consumed * co2_factor)
             
             start_date_obj = datetime.datetime(date.year, date.month, date.day, date.hour)
             shipmentstart=DimDate.objects.get(dateid=int(start_date_obj.strftime('%Y%m%d%H')))

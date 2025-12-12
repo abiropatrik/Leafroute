@@ -55,7 +55,7 @@ def dashboards(request):
     ))
 
     fig_co2_volume.update_layout(
-        title='CO2 Kibocsátás / Szállított Térfogat (Havi Bontás)',
+        title='CO2 Kibocsátás / Szállított térfogat (havi bontás)',
         xaxis_title='Hónap',
         yaxis_title='CO2 / Térfogat (kg/m³)'
     )
@@ -117,7 +117,7 @@ def dashboards(request):
     ))
 
     fig_vehicle_co2.update_layout(
-        title='CO2 Kibocsátás / Megtett Távolság (Járműtípusonként)',
+        title='CO2 Kibocsátás / Megtett távolság (járműtípusonként)',
         xaxis_title='Járműtípus',
         yaxis_title='CO2 / Távolság (g/km)'
     )
@@ -157,7 +157,7 @@ def dashboards(request):
     ))
 
     fig_vehicle_cost.update_layout(
-        title='Költség / Megtett Távolság (Járműtípusonként)',
+        title='Költség / Megtett távolság (járműtípusonként)',
         xaxis_title='Járműtípus',
         yaxis_title='Költség / Távolság (Ft/km)'
     )
@@ -197,9 +197,9 @@ def dashboards(request):
     ))
 
     fig_vehicle_speed.update_layout(
-        title='Megtett km/ Szállítás hossza (Járműtípusonként)',
+        title='Megtett km/ kiszállítási idő hossza (járműtípusonként)',
         xaxis_title='Járműtípus',
-        yaxis_title='Megtett km/ Szállítás hossza'
+        yaxis_title='Megtett km/ szállítás hossza (h)'
     )
     chart_vehicle_speed_div = fig_vehicle_speed.to_html(include_plotlyjs=False, full_html=False)
 
@@ -236,9 +236,9 @@ def dashboards(request):
     ))
 
     fig_co2_dist.update_layout(
-        title='CO2 Kibocsátás a Távolság Függvényében',
+        title='CO2 Kibocsátás a távolság függvényében',
         xaxis_title='Távolság (km)',
-        yaxis_title='CO2 Kibocsátás (kg)'
+        yaxis_title='CO2 kibocsátás (kg)'
     )
 
     chart_co2_dist_div = fig_co2_dist.to_html(include_plotlyjs=False, full_html=False)
@@ -269,7 +269,7 @@ def dashboards(request):
     fig_prod_co2.add_trace(go.Scatter(
         x=df_prod_year['productionyear'].tolist(),
         y=df_prod_year['avg_cons'].tolist(),
-        mode='lines+markers',
+        mode='lines',
         name='Átlagos fogyasztás',
         line=dict(color='green'),
         hovertemplate=(
@@ -315,7 +315,7 @@ def dashboards(request):
     ))
 
     fig_vehicle_pie.update_layout(
-        title='Járműtípusok Használatának Aránya (Szállítások Száma Alapján)'
+        title='Járműtípusok használatának aránya (szállítások száma alapján)'
     )
 
     chart_vehicle_pie_div = fig_vehicle_pie.to_html(include_plotlyjs=False, full_html=False)
@@ -350,9 +350,9 @@ def dashboards(request):
     ))
 
     fig_route_count.update_layout(
-        title='Leggyakrabban Használt Útvonalak',
+        title='Leggyakrabban használt útvonalak',
         xaxis_title='Útvonal',
-        yaxis_title='Használat Száma (db)'
+        yaxis_title='Használat száma (db)'
     )
 
     chart_route_count_div = fig_route_count.to_html(include_plotlyjs=False, full_html=False)

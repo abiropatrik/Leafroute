@@ -28,7 +28,7 @@ class Command(BaseCommand):
     @transaction.atomic
     def handle(self, *args, **options):
         
-        # --- 1. City Data ---
+        #City Data
         self.stdout.write("Creating/updating demo cities...")
         cities_data = [
             {"name": "Budapest", "defaults": {"country": "Hungary", "continent": "Europe", "has_airport": True, "has_harbour": True, "latitude_coordinate": 47.4979, "longitude_coordinate": 19.0402}},
@@ -51,7 +51,7 @@ class Command(BaseCommand):
         
         self.stdout.write(self.style.SUCCESS(f"Cities synced: {len(cities_data)}"))
 
-        # --- 2. Warehouse & Address Data ---
+        #Warehouse and Address Data
         self.stdout.write("Creating/updating demo addresses and warehouses...")
         warehouses_data = [
             {"city_name": "Budapest", "address_details": {"street": "Európa utca", "house_number": "4", "institution_name": "Budapesti raktár"}, "warehouse_details": {"capacity": "15000", "fullness": "10000", "contact_email": "budapest-ops@leafroute.demo"}},
@@ -99,7 +99,7 @@ class Command(BaseCommand):
             f"{created_addr_count} addresses created, {created_wh_count} warehouses created."
         ))
 
-        # --- 3. Transport Hub Addresses ---
+        #Transport hub addresses
         self.stdout.write("Creating/updating demo transport hubs (stations, ports, airports)...")
         transport_hubs = [
             {"city_name": "Budapest", "type": "station", "name": "Budapest-Keleti Pályaudvar", "street": "Kerepesi út", "number": "2-4"},
@@ -150,7 +150,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f"Transport hubs synced: {hub_count}"))
         self.stdout.write(self.style.SUCCESS("All demo location data synced successfully."))
 
-        # --- 4. Product & Inventory Data ---
+        #Product and Inventory Data
         self.stdout.write("---")
         self.stdout.write("Creating/updating demo products...")
         
@@ -208,11 +208,11 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f"Inventory synced: {inventory_count} new stock records created."))
         self.stdout.write(self.style.SUCCESS("All product and inventory data synced successfully."))
 
-        # 5. Vehicle Fleet 
+        #Vehicle Fleet 
         self.stdout.write("---")
         self.stdout.write("Categorizing addresses for vehicle placement...")
 
-        # 5a. Categorize all addresses
+        #Categorizing addresses
         warehouse_address_ids = Warehouse_ST.objects.values_list('address__address_id', flat=True)
         warehouse_addresses = list(Address_ST.objects.filter(address_id__in=warehouse_address_ids))
         hub_addresses = Address_ST.objects.exclude(address_id__in=warehouse_address_ids)
@@ -268,7 +268,7 @@ class Command(BaseCommand):
             ]
         }
         
-        # 5c. Generate Vehicle Fleet
+        # Generate Vehicle Fleet
         self.stdout.write("Generating vehicle fleet...")
         total_vehicles_created = 0
 
@@ -344,8 +344,7 @@ class Command(BaseCommand):
 
         
 
-        # --- 2. Create the Warehouse Connection ---
-        # (Correcting `is_in_different_continent` to False for London-Paris)
+        # Createing the Warehouse Connection ---
         wh_connection, _ = WarehouseConnection_ST.objects.update_or_create(
             warehouse1=wh_london,
             warehouse2=wh_paris,
@@ -356,7 +355,7 @@ class Command(BaseCommand):
         )
         self.stdout.write("Created warehouse connection: London to Paris")
 
-        # --- 3. Create Route 1: Road-Only ---
+        # Create Route 1: Road-Only
         route1 = Route_ST.objects.create(
             warehouse_connection=wh_connection
         )
@@ -370,7 +369,7 @@ class Command(BaseCommand):
         )
         self.stdout.write("Created Route 1 (Road Only)")
 
-        # --- 4. Create Route 2: Road-Sea-Road ---
+        # Create Route 2: Road-Rail-Road 
         route2 = Route_ST.objects.create(
             warehouse_connection=wh_connection
         )
@@ -401,7 +400,7 @@ class Command(BaseCommand):
         )
         self.stdout.write("Created Route 2 (Road-train-Road)")
 
-        # --- 5. Create Route 3: Road-Air-Road ---
+        # Create Route 3: Road-Air-Road
         route3 = Route_ST.objects.create(
             warehouse_connection=wh_connection
         )
