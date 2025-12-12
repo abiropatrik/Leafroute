@@ -1,5 +1,5 @@
 # Rövid ismertetés
-Jelen alkalmazás egy szakdolgozat keretein bellül létrejött környezetbarát Transportation Management System.
+Jelen alkalmazás a szakdolgozat keretein bellül létrejött környezetbarát Transportation Management System.
 
 A kutatásról, a programról és az eredményekről bővebb információ a szakdolgozat beszámolójában található.
 
